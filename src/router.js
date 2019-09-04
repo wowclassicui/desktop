@@ -11,7 +11,7 @@ import Login from './components/Login.vue'
 Vue.use(Router)
 
 let router = new Router({
-    mode: 'history',
+    mode: 'hash',
     routes: [
         {
             path: '/',
