@@ -7,6 +7,6 @@ export default {
         })
     },
     find (name) {
-        return axios.get('/addons/find/' + name + '?include=mainFile')
+        return axios.get('/addons/find/' + name + '?include=mainFile,folders')
     }
 }

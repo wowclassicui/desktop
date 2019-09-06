@@ -11,15 +11,27 @@
             </div>
             <div v-else>
                 <b-button-group class="mb-2">
-                    <b-button @click="fetch" :disabled="fetching">Fetch</b-button>
+                    <b-button @click="fetch" :disabled="loading">
+                        <span v-if="loading">Fetching..</span>
+                        <span v-else>Fetch</span>
+                    </b-button>
                     <!-- <b-button>Update All</b-button> -->
                 </b-button-group>
 
                 <b-table sticky-header striped hover head-variant="light" :items="addons" :fields="fields">
 
+                    <template slot="[logo]" slot-scope="data">
+                        <img
+                            class="img-fluid"
+                            style="max-width: 32px"
+                            :src="getLogoUrl(data.item)"
+                            :alt="data.item.slug"
+                        >
+                    </template>
+
                     <template slot="[actions]" slot-scope="data">
                         <b-button
-                            v-if="data.item.mainFile !== null && data.item.mainFile.version !== data.item.localVersion"
+                            v-if="data.item.mainFile !== null && data.item.mainFile.hash !== data.item.meta.localHash"
                             size="sm"
                             @click="onUpdate(data.index, data.item)"
                         >Update</b-button>
@@ -49,7 +61,7 @@ const unzipper = require('unzipper')
 
 const del = require('del')
 
-import { install } from '../utils/addons'
+import { install, getHash, getAddonsPath } from '../utils/addons'
 
 export default {
     computed: {
@@ -60,6 +72,10 @@ export default {
     data () {
         return {
             fields: [
+                {
+                    key: 'logo',
+                    label: ''
+                },
                 {
                     key: 'name',
                     label: 'Name',
@@ -76,17 +92,12 @@ export default {
                     key: 'mainFile.version'
                 },
                 {
-                    label: 'Local',
-                    key: 'localVersion'
-                },
-                {
                     key: 'actions',
                     label: ''
                 }
             ],
             addons: [],
-            fetched: false,
-            fetching: false
+            loading: false
         }
     },
     methods: {
@@ -95,67 +106,136 @@ export default {
                 return
             }
 
+            // Reset addons table
             this.addons = []
 
+            let exists = []
+
             let _vm = this
-            this.fetching = true
+            this.loading = true
 
-            let addonsPath = store.get('installationFolder') + '/_classic_/Interface/AddOns'
+            let addonsPath = getAddonsPath()
 
-            fs.readdir(addonsPath, (err, files) => {
-                for (let folder of files) {
+            console.log('fetching..', addonsPath)
+
+            // --- TODO: Move this out
+            const fetchAddonsPath = (path) => {
+                return new Promise((resolve, reject) => {
+                    fs.readdir(path, (err, files) => {
+                        if (err) {
+                            // AddOns path was probably not found.
+                            // Should we do something about it?
+                            return reject(err)
+                        }
+
+                        resolve(files)
+                    })
+                })
+            }
+            // ---
+
+            console.log('scanning addons path..')
+
+            let files = await fetchAddonsPath(addonsPath)
+
+            console.log('fetching api for matches..')
+
+            let fetchPromises = []
+            files.forEach((file) => {
+                // TODO: Can also be a file, how to check?
+                let folder = file
+
+                fetchPromises.push(new Promise((resolve/*, reject*/) => {
                     addons.find(folder)
-                        .then((resp) => {
-                            console.log(resp)
-
+                        .then(async (resp) => {
+                            console.log('find', resp)
                             let row = resp.data.data
 
-                            row.folder = folder
+                            // Avoid duplicates
+                            if (exists.includes(row.id)) {
+                                console.log('exists', row.name)
+                                return resolve(null)
+                            }
+                            exists.push(row.id)
 
-                            let tocPath = addonsPath + '/' + folder + '/' + folder + '.toc'
-                            console.log('tocPath', tocPath)
+                            if (row.mainFile === null) {
+                                // No main file here, skipping for now
+                                console.log('no main file for', row.name)
+                                return resolve(null)
+                            }
 
-                            let rl = readline.createInterface({
-                                input: fs.createReadStream(addonsPath + '/' + folder + '/' + folder + '.toc')
-                            })
+                            // Let's define what we're looking for
+                            let folders = []
+                            if (row.folders && row.folders.length > 0) {
+                                folders = row.folders.map(a => a.name)
+                            } else {
+                                folders.push(row.name)
+                            }
 
-                            let localVersion = null
+                            // console.log('addon', row.name, folders)
 
-                            rl.on('line', function (line) {
-                                if (line.includes('## Version:')) {
-                                    console.log('FOUND')
+                            let { hash, bank, files } = await getHash(folders)
 
-                                    localVersion = line.replace('## Version:', '')
-                                    console.log('local version', localVersion)
+                            row.meta = {
+                                folder,
+                                localHash: hash
+                            }
 
-                                    row.localVersion = localVersion.trim()
+                            // console.log('files', files)
 
-                                    rl.close()
-                                }
-                            })
+                            // console.log('localCrc', bank)
+                            // console.log('remoteCrc', row.mainFile.crc)
 
-                            rl.on('close', function () {
-                                console.log('parser closed')
-                                _vm.addons.push(row)
-                            })
+                            // let arrA = bank
+                            // let arrB = row.mainFile.crc
 
+                            // let difference = arrA
+                            //     .filter(x => !arrB.includes(x))
+                            //     .concat(arrB.filter(x => !arrA.includes(x)))
+
+                            // console.log('diff', difference)
+
+                            console.log('localHash', row.meta.localHash)
+                            console.log('remoteHash', row.mainFile.hash)
+
+                            _vm.addons.push(row)
+                            resolve(true)
                         })
+                        .catch((err) => {
+                            console.log('failed fetching - 404 maybe?')
+                            resolve(null)
+                        })
+
+                        // .catch(reject)
+
                         // .catch(() => {
-                        //     console.log(err)
+                        //     console.log('failed fetching - 404 maybe?')
                         // })
-
-                }
-
+                }))
             })
 
-            // NOTE: use Promise.all for true async
-            this.fetching = false
-            this.fetched = true
+            Promise.all(fetchPromises)
+                .then((addons) => {
+                    // addons.forEach((addon) => {
+                    //     if (addon === null) {
+                    //         return
+                    //     }
+
+                    //     _vm.addons.push(addon)
+                    // })
+
+                    _vm.loading = false
+                })
+                .catch((errors) => {
+                    // Should never reject. But who knows.
+                    console.log('fetchPromises catch', errors)
+                    _vm.loading = false
+                })
         },
         async onUpdate (index, item) {
-            console.log('item', item)
+            this.loading = true
 
-            try {
+            // try {
                 let fileId = item.mainFile.id
                 await install(fileId)
 
@@ -164,12 +244,17 @@ export default {
                 })
                 let addon = res.data.data
 
-                addon.localVersion = addon.mainFile.version
-                addon.folder = item.folder
+                addon.meta = {
+                    folder: item.folder,
+                    localHash: addon.mainFile ? addon.mainFile.hash : null
+                }
+
                 this.$set(this.addons, index, addon)
-            } catch (err) {
-                console.log('err', err)
-            }
+            // } catch (err) {
+            //     console.log('err', err)
+            // }
+
+            this.loading = false
 
             // let _vm = this
             // let addonsPath = store.get('installationFolder') + '/_classic_/Interface/AddOns'
@@ -207,10 +292,11 @@ export default {
             // }
         },
         async onRemove (index, item) {
+            this.loading = true
+
             let addonsPath = store.get('installationFolder') + '/_classic_/Interface/AddOns'
 
             let path = addonsPath + '/' + item.folder
-            // let path = addonsPath + '/this is a test'
 
             let deletedPaths = await del([path], {
                 force: true
@@ -219,28 +305,21 @@ export default {
             if (deletedPaths.length > 0) {
                 this.$delete(this.addons, index)
             }
+
+            this.loading = false
         },
-        // saveBlob (blob, callback) {
-        //     let reader = new FileReader()
-        //     reader.onload = () => {
-        //         if (reader.readyState === 2) {
-        //             let buffer = new Buffer(reader.result)
-        //             let tempPath = app.getPath('temp') + '/' + Math.random().toString(36).substring(7)
+        getLogoUrl (item) {
+            let media = item.media.filter((obj) => {
+                return obj.collection === 'logo'
+            })
 
-        //             fs.writeFileSync(tempPath, buffer)
-        //             callback(tempPath)
-        //         }
-        //     }
-
-        //     reader.readAsArrayBuffer(blob)
-        // }
+            if (media[0] !== null) {
+                return media[0].links.web
+            }
+        }
     },
     mounted () {
-        this.fetch()
+        // this.fetch()
     }
 }
 </script>
-
-<style scoped>
-
-</style>
