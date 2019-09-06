@@ -1,8 +1,6 @@
 <template>
     <div>
         <b-container fluid>
-            <h1>My Addons</h1>
-
             <div v-if="mustSpecifyFolder">
                 <b-alert show variant="warning">
                     Please specify your WoW Classic installation folder.
@@ -15,11 +13,21 @@
                         <span v-if="loading">Fetching..</span>
                         <span v-else>Fetch</span>
                     </b-button>
-                    <!-- <b-button>Update All</b-button> -->
+                    <b-button>Update All</b-button>
                 </b-button-group>
 
-                <b-table sticky-header striped hover head-variant="light" :items="addons" :fields="fields">
-
+                <b-table
+                    sticky-header
+                    striped
+                    hover
+                    head-variant="light"
+                    borderless
+                    responsive
+                    :items="addons"
+                    :fields="fields"
+                    class="h-100"
+                >
+                    <!-- Logo -->
                     <template slot="[logo]" slot-scope="data">
                         <img
                             class="img-fluid"
@@ -28,17 +36,20 @@
                             :alt="data.item.slug"
                         >
                     </template>
-
+                    <!-- Actions -->
                     <template slot="[actions]" slot-scope="data">
+                        <!-- Update -->
                         <b-button
                             v-if="data.item.mainFile !== null && data.item.mainFile.hash !== data.item.meta.localHash"
                             size="sm"
                             @click="onUpdate(data.index, data.item)"
+                            :disabled="loading"
                         >Update</b-button>
-
+                        <!-- Remove -->
                         <b-button
                             size="sm"
                             @click="onRemove(data.index, data.item)"
+                            :disabled="loading"
                         >Remove</b-button>
                     </template>
 
@@ -237,7 +248,7 @@ export default {
 
             // try {
                 let fileId = item.mainFile.id
-                await install(fileId)
+                await install(fileId) // TODO: Send folders to remove
 
                 let res = await addons.show(item.id, {
                     include: 'mainFile'

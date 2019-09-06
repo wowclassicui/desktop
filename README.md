@@ -1,4 +1,4 @@
-# desktop2
+# Classic Warcraft App
 
 ## Project setup
 ```
