@@ -9,6 +9,13 @@ import router from './router'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
+// Sentry
+import * as Sentry from '@sentry/electron'
+if (process.env.NODE_ENV === 'production') {
+  console.log('enablind Sentry since we are in prod mode')
+  Sentry.init({ dsn: process.env.VUE_APP_SENTRY_DSN })
+}
+
 axios.defaults.baseURL = process.env.VUE_APP_API_BASE_URL
 const token = localStorage.getItem('token')
 if (token) {

@@ -8,14 +8,15 @@
 export default {
   name: 'app',
   created () {
-    this.$http.interceptors.response.use(undefined, function (err) {
-      return new Promise(function (/*resolve, reject*/) {
-        if (err.status === 401 && err.config && !err.config.__isRetryRequest) {
-          this.$store.dispatch('auth/logout')
-        }
+    this.$http.interceptors.response.use((res) => res, (err) => {
+      if (err.response && err.response.status === 401 && err.config && !err.config.__isRetryRequest) {
+        this.$store.dispatch('auth/logout')
+          .then(() => {
+            this.$router.push('/login')
+          })
+      }
 
-        throw err
-      })
+      return Promise.reject(err)
     })
   }
 }

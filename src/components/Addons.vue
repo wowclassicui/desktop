@@ -8,14 +8,20 @@
                 </b-alert>
             </div>
             <div v-else>
-                <b-button-group class="mb-2">
-                    <b-button @click="fetch" :disabled="loading">
-                        <span v-if="loading">Fetching..</span>
-                        <span v-else>Fetch</span>
-                    </b-button>
-                    <b-button>Update All</b-button>
-                </b-button-group>
-
+                <!-- Top Actions -->
+                <b-button-toolbar>
+                    <b-button-group class="my-1">
+                        <!-- Fetch -->
+                        <b-button @click="fetch" :disabled="loading">
+                            <span v-if="loading">Fetching..</span>
+                            <span v-else>Fetch</span>
+                        </b-button>
+                    </b-button-group>
+                    <!-- <b-button-group class="mx-1">
+                        <b-button>Update All</b-button>
+                    </b-button-group> -->
+                </b-button-toolbar>
+                <!-- Table -->
                 <b-table
                     sticky-header
                     striped
@@ -38,21 +44,24 @@
                     </template>
                     <!-- Actions -->
                     <template slot="[actions]" slot-scope="data">
-                        <!-- Update -->
-                        <b-button
-                            v-if="data.item.mainFile !== null && data.item.mainFile.hash !== data.item.meta.localHash"
-                            size="sm"
-                            @click="onUpdate(data.index, data.item)"
-                            :disabled="loading"
-                        >Update</b-button>
-                        <!-- Remove -->
-                        <b-button
-                            size="sm"
-                            @click="onRemove(data.index, data.item)"
-                            :disabled="loading"
-                        >Remove</b-button>
+                        <b-button-toolbar>
+                            <b-button-group>
+                                <!-- Update -->
+                                <b-button
+                                    v-if="data.item.mainFile !== null && data.item.mainFile.hash !== data.item.meta.localHash"
+                                    size="sm"
+                                    @click="onUpdate(data.index, data.item)"
+                                    :disabled="loading"
+                                >Update</b-button>
+                                <!-- Remove -->
+                                <b-button
+                                    size="sm"
+                                    @click="onRemove(data.index, data.item)"
+                                    :disabled="loading"
+                                >Remove</b-button>
+                            </b-button-group>
+                        </b-button-toolbar>
                     </template>
-
                 </b-table>
             </div>
         </b-container>
@@ -63,16 +72,10 @@
 const Store = require('electron-store')
 const store = new Store()
 const fs = require('fs')
-const readline = require('readline')
+// const { app } = require('electron').remote
 import addons from '../api/addons'
-import downloads from '../api/downloads'
 
-const { app } = require('electron').remote
-const unzipper = require('unzipper')
-
-const del = require('del')
-
-import { install, getHash, getAddonsPath } from '../utils/addons'
+import { install, update, remove, getHash, getAddonsPath } from '../utils/addons'
 
 export default {
     computed: {
@@ -235,6 +238,8 @@ export default {
                     //     _vm.addons.push(addon)
                     // })
 
+                    console.log('all done fetching stuff!')
+
                     _vm.loading = false
                 })
                 .catch((errors) => {
@@ -246,12 +251,15 @@ export default {
         async onUpdate (index, item) {
             this.loading = true
 
-            // try {
-                let fileId = item.mainFile.id
-                await install(fileId) // TODO: Send folders to remove
+            console.log('updating..', item.name)
+
+            try {
+                let result = await update(item)
+
+                console.log('update done, now fetching addon status again')
 
                 let res = await addons.show(item.id, {
-                    include: 'mainFile'
+                    include: 'mainFile,folders'
                 })
                 let addon = res.data.data
 
@@ -261,57 +269,22 @@ export default {
                 }
 
                 this.$set(this.addons, index, addon)
-            // } catch (err) {
-            //     console.log('err', err)
-            // }
+            } catch (err) {
+                console.log('failed to update?', err)
+            }
+
+            console.log('update process ended')
 
             this.loading = false
-
-            // let _vm = this
-            // let addonsPath = store.get('installationFolder') + '/_classic_/Interface/AddOns'
-
-            // try {
-            //     let token = await downloads.newToken(item.mainFile.id)
-            //     let downloadToken = token.data.data.token
-
-            //     downloads.get(downloadToken)
-            //         .then((res) => {
-            //             _vm.saveBlob(res.data, function (tempPath) {
-            //                 console.log('temp zip path', tempPath)
-
-            //                 fs.createReadStream(tempPath)
-            //                     .pipe(unzipper.Extract({
-            //                         path: addonsPath
-            //                     }))
-            //                     .promise()
-            //                     .then(async () => {
-            //                         console.log('WE ARE DONE!')
-
-            //                         let res = await addons.show(item.id, {
-            //                             include: 'mainFile'
-            //                         })
-            //                         let addon = res.data.data
-
-            //                         addon.localVersion = addon.mainFile.version
-            //                         addon.folder = item.folder
-            //                         _vm.$set(_vm.addons, index, addon)
-            //                     })
-            //             })
-            //         })
-            // } catch (err) {
-            //     console.log('download exception', err)
-            // }
         },
         async onRemove (index, item) {
             this.loading = true
 
-            let addonsPath = store.get('installationFolder') + '/_classic_/Interface/AddOns'
+            console.log('starting to delete some stuff..')
 
-            let path = addonsPath + '/' + item.folder
+            let deletedPaths = await remove(item)
 
-            let deletedPaths = await del([path], {
-                force: true
-            })
+            console.log('deleted paths', deletedPaths)
 
             if (deletedPaths.length > 0) {
                 this.$delete(this.addons, index)

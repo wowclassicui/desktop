@@ -8,8 +8,31 @@ const path = require('path')
 const { app } = require('electron').remote
 const unzipper = require('unzipper')
 const crypto = require('crypto')
+const del = require('del')
 
-const install =  (fileId) => {
+const update = (addon) => {
+    return new Promise(async (resolve, reject) => {
+        // Just checking that we have in fact a mainFile to download
+        if (!addon.mainFile) {
+            return reject(new Error('No main file to download, aborting'))
+        }
+
+        // Delete first
+        let deletedPaths = await remove(addon)
+
+        if (deletedPaths.length === 0) {
+            return reject(new Error('No folders deleted'))
+        }
+
+        // Then install latest v
+        let fileId = addon.mainFile.id
+        await install(fileId)
+
+        resolve()
+    })
+}
+
+const install = (fileId) => {
     return new Promise(async (resolve, reject) => {
         let addonsPath = getAddonsPath()
 
@@ -21,7 +44,7 @@ const install =  (fileId) => {
                 .then(async (res) => {
                     let tempPath = await saveBlob(res.data)
 
-                    console.log('temp zip path', tempPath)
+                    // console.log('temp zip path', tempPath)
 
                     fs.createReadStream(tempPath)
                         .pipe(unzipper.Extract({
@@ -29,13 +52,50 @@ const install =  (fileId) => {
                         }))
                         .promise()
                         .then(() => {
-                            console.log('addon installed, resolving')
-                            resolve()
+                            // Addon installed, resolving
+                            resolve('addon installed with success')
                         })
                 })
         } catch (err) {
             reject(err)
         }
+    })
+}
+
+const remove = (addon) => {
+    return new Promise(async (resolve, reject) => {
+        let addonsPath = getAddonsPath()
+
+        if (!addon.folders) {
+            return [] // Just in case
+        }
+
+        let deletePromises = []
+        addon.folders.forEach((folder) => {
+            let name = folder.name
+            let path = addonsPath + '/' + name
+
+            deletePromises.push(new Promise(async (resolve/*, reject*/) => {
+                let deletedPaths = await del([path], {
+                    force: true
+                })
+
+                resolve(deletedPaths)
+            }))
+        })
+
+        // Wait for all promises to finish
+        Promise.all(deletePromises)
+            .then((deletedPaths) => {
+                let all = [].concat(...deletedPaths)
+
+                // Then resolve
+                resolve(all)
+            })
+            .catch((err) => {
+                // Or reject..
+                reject(err)
+            })
     })
 }
 
@@ -92,12 +152,6 @@ const getHash = (folders) => {
                 console.log('promises walkdir err', err)
                 reject(err)
             })
-    })
-}
-
-const remove = () => {
-    return new Promise((resolve, reject) => {
-
     })
 }
 
@@ -179,4 +233,4 @@ const walkdir = (dir, callback) => {
     })
 }
 
-export { install, remove, getHash, getAddonsPath }
+export { install, update, remove, getHash, getAddonsPath }

@@ -15,8 +15,8 @@
 
         <b-container fluid class="my-2">
             <b-alert show variant="info">
-                Proof of concept App - go to our website for updates.<br>
-                => <a href="https://classic-warcraft.com">https://classic-warcraft.com</a>
+                Proof of concept App - Check out our website for updates.<br>
+                * <a href="https://classic-warcraft.com">https://classic-warcraft.com</a>
             </b-alert>
         </b-container>
 
@@ -36,6 +36,9 @@ export default {
                     this.$router.push('/login')
                 })
         }
+    },
+    created () {
+        this.$router.push('/addons')
     }
 }
 </script>
