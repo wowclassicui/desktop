@@ -3,100 +3,78 @@ import downloads from '../api/downloads'
 import crc32 from 'crc/crc32'
 const Store = require('electron-store')
 const store = new Store()
-const fs = require('fs')
-const path = require('path')
-const { app } = require('electron').remote
 const unzipper = require('unzipper')
 const crypto = require('crypto')
 const del = require('del')
+const blobToStream = require('blob-to-stream')
+const remote = require('electron').remote
+const fs = remote.require('fs')
+const path = remote.require('path')
+const { join } = path
 
 const update = (addon) => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         // Just checking that we have in fact a mainFile to download
-        if (!addon.mainFile) {
+        if (!Object.prototype.hasOwnProperty.call(addon, 'mainFile')) {
             return reject(new Error('No main file to download, aborting'))
         }
 
         // Delete first
-        let deletedPaths = await remove(addon)
+        remove(addon)
+        .then((deletedPaths) => {
+            // console.log('deletedPaths', deletedPaths)
 
-        if (deletedPaths.length === 0) {
-            return reject(new Error('No folders deleted'))
-        }
+            // Then install latest version
+            let fileId = addon.mainFile.id
 
-        // Then install latest v
-        let fileId = addon.mainFile.id
-        await install(fileId)
-
-        resolve()
+            install(fileId)
+            .then(resolve)
+            .catch(reject)
+        })
+        .catch(reject)
     })
 }
 
 const install = (fileId) => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         let addonsPath = getAddonsPath()
 
-        try {
-            let token = await downloads.newToken(fileId)
-            let downloadToken = token.data.data.token
+        downloads.newToken(fileId)
+        .then((res) => {
+            let downloadToken = res.data.data.token
 
             downloads.get(downloadToken)
-                .then(async (res) => {
-                    let tempPath = await saveBlob(res.data)
-
-                    // console.log('temp zip path', tempPath)
-
-                    fs.createReadStream(tempPath)
-                        .pipe(unzipper.Extract({
-                            path: addonsPath
-                        }))
-                        .promise()
-                        .then(() => {
-                            // Addon installed, resolving
-                            resolve('addon installed with success')
-                        })
-                })
-        } catch (err) {
-            reject(err)
-        }
+            .then((res) => {
+                // blob to stream, pipe extraction then resolve
+                // using promise
+                blobToStream(res.data)
+                .pipe(unzipper.Extract({
+                    path: addonsPath
+                }))
+                .promise()
+                .then(resolve)
+                .catch(reject)
+            })
+            .catch(reject)
+        })
+        .catch(reject)
     })
 }
 
 const remove = (addon) => {
-    return new Promise(async (resolve, reject) => {
-        let addonsPath = getAddonsPath()
+    let addonsPath = getAddonsPath()
 
-        if (!addon.folders) {
-            return [] // Just in case
-        }
+    // No folders to remove. Shouldn't happen, but who knows.
+    if (!Object.prototype.hasOwnProperty.call(addon, 'folders') || addon.folders.length === 0) {
+        return Promise.resolve([])
+    }
 
-        let deletePromises = []
-        addon.folders.forEach((folder) => {
-            let name = folder.name
-            let path = addonsPath + '/' + name
-
-            deletePromises.push(new Promise(async (resolve/*, reject*/) => {
-                let deletedPaths = await del([path], {
-                    force: true
-                })
-
-                resolve(deletedPaths)
-            }))
-        })
-
-        // Wait for all promises to finish
-        Promise.all(deletePromises)
-            .then((deletedPaths) => {
-                let all = [].concat(...deletedPaths)
-
-                // Then resolve
-                resolve(all)
-            })
-            .catch((err) => {
-                // Or reject..
-                reject(err)
-            })
+    let foldersToDelete = addon.folders.map((folder) => {
+        return path.resolve(addonsPath, folder.name)
     })
+
+    // Returns a Promise
+    return del(foldersToDelete, { force: true })
 }
 
 const getHash = (folders) => {
@@ -105,30 +83,28 @@ const getHash = (folders) => {
 
         let walkPromises = []
         folders.forEach((folder) => {
-            let path = addonsPath + '/' + folder
+            let folderPath = path.resolve(addonsPath, folder)
 
-            console.log('walking through', path)
-
-            try {
-                walkPromises.push(walkdirPromise(path))
-            } catch (err) {
-                console.log('addon folder not found', err)
-                // Rejection not wanted here
-            }
+            walkPromises.push(walkdirPromise(folderPath))
         });
 
         Promise.all(walkPromises)
-            .then((results) => {
-                let files = [].concat(...results)
+        .then((results) => {
+            let files = [].concat(...results)
 
-                let bank = []
-                let crc
-                files.forEach((file) => {
-                    crc = crc32(fs.readFileSync(file))
-                    bank.push(crc)
+            Promise.all(files.map((file) => {
+                return new Promise((resolve, reject) => {
+                    fs.readFile(file, (err, buffer) => {
+                        if (err) {
+                            return reject(err)
+                        }
+
+                        resolve(crc32(buffer))
+                    })
                 })
-
-                bank.sort((a, b) => {
+            }))
+            .then((pool) => {
+                pool.sort((a, b) => {
                     if (a < b) {
                         return -1
                     }
@@ -139,43 +115,65 @@ const getHash = (folders) => {
                 })
 
                 let shasum = crypto.createHash('sha1')
-                shasum.update(bank.join(''))
+                shasum.update(pool.join(''))
                 let hash = shasum.digest('hex')
 
-                return resolve({
-                    hash,
-                    bank,
-                    files
-                })
+                resolve({ hash, pool, files })
             })
-            .catch((err) => {
-                console.log('promises walkdir err', err)
-                reject(err)
-            })
+            .catch(reject)
+        })
+        .catch(reject)
     })
 }
 
 const getAddonsPath = () => {
-    return store.get('installationFolder') + '/_classic_/Interface/AddOns'
+    return path.resolve(
+        store.get('installationFolder'),
+        '_classic_',
+        'Interface',
+        'AddOns'
+    )
 }
 
-// --- PRIVATE ---
-
-const saveBlob = (blob) => {
-    return new Promise((resolve/*, reject*/) => {
-        let reader = new FileReader()
-        reader.onload = () => {
-            if (reader.readyState === 2) {
-                let buffer = new Buffer(reader.result)
-                let tempPath = app.getPath('temp') + '/' + Math.random().toString(36).substring(7)
-
-                fs.writeFileSync(tempPath, buffer)
-
-                resolve(tempPath)
+const scanAddonsDir = (path) => {
+    return new Promise((resolve, reject) => {
+        fs.readdir(path, (err, files) => {
+            if (err) {
+                return reject(err)
             }
-        }
 
-        reader.readAsArrayBuffer(blob)
+            if (files.length === 0) {
+                // No addons, yet
+                return resolve()
+            }
+
+            let folders = []
+            let statPromises = []
+
+            for (const file of files) {
+                statPromises.push(new Promise((resolve, reject) => {
+                    fs.stat(join(path, file), (err, stats) => {
+                        if (err) {
+                            return reject(err)
+                        }
+
+                        if (stats.isDirectory()) {
+                            folders = [...folders, file]
+                        }
+
+                        resolve()
+                    })
+                }))
+            }
+
+            Promise.all(statPromises)
+            .then(() => {
+                resolve(folders)
+            })
+            .catch(() => {
+                resolve([])
+            })
+        })
     })
 }
 
@@ -184,8 +182,7 @@ const walkdirPromise = (dir) => {
         walkdir(dir, (err, files) => {
             if (err) {
                 // return reject(err)
-                // Mute "folder not found" and others..
-                return resolve([])
+                return resolve([]) // Mute "folder not found"
             }
 
             resolve(files)
@@ -233,4 +230,4 @@ const walkdir = (dir, callback) => {
     })
 }
 
-export { install, update, remove, getHash, getAddonsPath }
+export { install, update, remove, getHash, getAddonsPath, scanAddonsDir }

@@ -1,90 +1,100 @@
 <template>
-    <div>
-        <b-container fluid>
-            <div v-if="mustSpecifyFolder">
-                <b-alert show variant="warning">
-                    Please specify your WoW Classic installation folder.
-                    Check out <a href="#" @click.prevent="$router.push('settings')">Settings</a>.
-                </b-alert>
-            </div>
-            <div v-else>
-                <!-- Top Actions -->
-                <b-button-toolbar>
-                    <b-button-group class="my-1">
-                        <!-- Fetch -->
-                        <b-button @click="fetch" :disabled="loading">
-                            <span v-if="loading">Fetching..</span>
-                            <span v-else>Fetch</span>
-                        </b-button>
-                    </b-button-group>
-                    <!-- <b-button-group class="mx-1">
-                        <b-button>Update All</b-button>
-                    </b-button-group> -->
-                </b-button-toolbar>
-                <!-- Table -->
-                <b-table
-                    sticky-header
-                    striped
-                    hover
-                    head-variant="light"
-                    borderless
-                    responsive
-                    :items="addons"
-                    :fields="fields"
-                    class="h-100"
-                >
-                    <!-- Logo -->
-                    <template slot="[logo]" slot-scope="data">
-                        <img
-                            class="img-fluid"
-                            style="max-width: 32px"
-                            :src="getLogoUrl(data.item)"
-                            :alt="data.item.slug"
+    <b-container fluid>
+        <div v-if="mustSpecifyFolder">
+            <b-alert show variant="warning">
+                Please specify your WoW Classic installation folder.
+                Check out <a href="#" @click.prevent="$router.push('settings')">Settings</a>.
+            </b-alert>
+        </div>
+        <div v-else>
+            <!-- Top Actions -->
+            <b-button-toolbar class="my-2">
+                <b-button-group>
+                    <!-- Fetch -->
+                    <b-button @click="handleFetch" :disabled="fetching">
+                        <font-awesome-icon icon="sync" fixed-width :spin="fetching" />
+                        Fetch
+                    </b-button>
+                    <!-- Update -->
+                    <b-button variant="primary" @click="handleUpdateAll" :disabled="updating">
+                        <font-awesome-icon icon="download" fixed-width :pulse="updating" />
+                        Update All
+                    </b-button>
+                </b-button-group>
+            </b-button-toolbar>
+            <!-- Table -->
+            <b-table
+                id="table-addons"
+                sticky-header="400px"
+                striped
+                hover
+                head-variant="light"
+                borderless
+                show-empty
+                :items="addons"
+                :fields="fields"
+                :sort-by.sync="sortBy"
+                :sort-desc.sync="sortDesc"
+                :sort-compare="sortCompare"
+            >
+                <!-- Logo -->
+                <template v-slot:cell(logo)="data">
+                    <img
+                        class="img-fluid"
+                        style="max-width: 32px"
+                        :src="getAddonLogoUrl(data.item)"
+                        :alt="data.item.slug"
+                    >
+                </template>
+                <!-- Actions -->
+                <template v-slot:cell(actions)="data">
+                    <div class="text-right">
+                        <!-- Update -->
+                        <b-button
+                            v-if="data.item.mainFile !== null && data.item.mainFile.hash !== data.item.meta.localHash"
+                            variant="outline-primary"
+                            size="sm"
+                            class="mr-1"
+                            @click="handleUpdate(data.index, data.item)"
+                            :disabled="updating || fetching"
                         >
-                    </template>
-                    <!-- Actions -->
-                    <template slot="[actions]" slot-scope="data">
-                        <b-button-toolbar>
-                            <b-button-group>
-                                <!-- Update -->
-                                <b-button
-                                    v-if="data.item.mainFile !== null && data.item.mainFile.hash !== data.item.meta.localHash"
-                                    size="sm"
-                                    @click="onUpdate(data.index, data.item)"
-                                    :disabled="loading"
-                                >Update</b-button>
-                                <!-- Remove -->
-                                <b-button
-                                    size="sm"
-                                    @click="onRemove(data.index, data.item)"
-                                    :disabled="loading"
-                                >Remove</b-button>
-                            </b-button-group>
-                        </b-button-toolbar>
-                    </template>
-                </b-table>
-            </div>
-        </b-container>
-    </div>
+                            <font-awesome-icon icon="download" size="sm" fixed-width />
+                            Update
+                        </b-button>
+                        <!-- Remove -->
+                        <b-button
+                            variant="outline-danger"
+                            size="sm"
+                            @click="handleRemove(data.index, data.item)"
+                            :disabled="removing || fetching"
+                        >
+                            <font-awesome-icon icon="trash-alt" size="sm" fixed-width />
+                        </b-button>
+                    </div>
+                </template>
+            </b-table>
+        </div>
+    </b-container>
 </template>
 
 <script>
-const Store = require('electron-store')
-const store = new Store()
-const fs = require('fs')
-// const { app } = require('electron').remote
 import addons from '../api/addons'
-
-import { install, update, remove, getHash, getAddonsPath } from '../utils/addons'
+import addonsMixin from '../mixins/addons'
+import { getWowPath } from '../utils/path'
+import { install, update, remove, getHash, getAddonsPath, scanAddonsDir } from '../utils/addons'
+import { toString } from '../utils/string'
 
 export default {
+    mixins: [addonsMixin],
     computed: {
         mustSpecifyFolder () {
-            return !store.has('installationFolder')
+            return getWowPath() === ''
         }
     },
     data () {
         return {
+            sortBy: 'needs_update',
+            sortDesc: true,
             fields: [
                 {
                     key: 'logo',
@@ -111,145 +121,100 @@ export default {
                 }
             ],
             addons: [],
-            loading: false
+            loading: false,
+            fetching: false,
+            updating: false,
+            removing: false
         }
     },
     methods: {
-        async fetch () {
+        async handleFetch () {
             if (this.mustSpecifyFolder) {
                 return
             }
 
-            // Reset addons table
+            // Reset
             this.addons = []
 
-            let exists = []
-
             let _vm = this
-            this.loading = true
+            this.fetching = true
 
-            let addonsPath = getAddonsPath()
+            try {
+                let addonsPath = getAddonsPath()
 
-            console.log('fetching..', addonsPath)
+                console.log('scanning addons dir..', addonsPath)
 
-            // --- TODO: Move this out
-            const fetchAddonsPath = (path) => {
-                return new Promise((resolve, reject) => {
-                    fs.readdir(path, (err, files) => {
-                        if (err) {
-                            // AddOns path was probably not found.
-                            // Should we do something about it?
-                            return reject(err)
+                let folders = await scanAddonsDir(addonsPath)
+
+                if (folders.length === 0) {
+                    // Nothing to work with, exiting
+                    return
+                }
+
+                console.log('fetching api for matches..')
+
+                let res = await addons.findAll(folders)
+
+                if (!res.data || res.data.data.length === 0) {
+                    return
+                }
+
+                let promises = []
+                res.data.data.forEach((addon) => {
+                    console.log('scanning', addon.name, addon.folders)
+
+                    promises.push(new Promise(async (resolve, reject) => {
+                        let row = addon
+
+                        if (row.mainFile === null) {
+                            // No main file here, skipping for now
+                            console.log('no main file for', row.name)
+                            return resolve(null)
                         }
 
-                        resolve(files)
+                        // Let's define what we're looking for
+                        let folders = []
+                        if (row.folders && row.folders.length > 0) {
+                            folders = row.folders.map(a => a.name)
+                        } else {
+                            folders.push(row.name)
+                        }
+
+                        let { hash, crcPool, files } = await getHash(folders)
+
+                        row.meta = {
+                            localHash: hash
+                        }
+
+                        // local crc32: crcPool
+                        // remote crc32: row.mainFile.crc
+
+                        console.log('localHash', row.meta.localHash)
+                        console.log('remoteHash', row.mainFile.hash)
+
+                        _vm.addons.push(row)
+                        resolve(row)
+                    }))
+                })
+
+                Promise.all(promises)
+                    .then((addons) => {
+                        console.log('all done fetching stuff!')
+                        _vm.fetching = false
                     })
-                })
+                    .catch((errors) => {
+                        // Should never reject. But who knows.
+                        console.log('fetchPromises catch', errors)
+                        _vm.fetching = false
+                    })
+            } catch (err) {
+                this.fetching = false
+                // throw err // Re-throw
+                console.log('fatal', err)
             }
-            // ---
-
-            console.log('scanning addons path..')
-
-            let files = await fetchAddonsPath(addonsPath)
-
-            console.log('fetching api for matches..')
-
-            let fetchPromises = []
-            files.forEach((file) => {
-                // TODO: Can also be a file, how to check?
-                let folder = file
-
-                fetchPromises.push(new Promise((resolve/*, reject*/) => {
-                    addons.find(folder)
-                        .then(async (resp) => {
-                            console.log('find', resp)
-                            let row = resp.data.data
-
-                            // Avoid duplicates
-                            if (exists.includes(row.id)) {
-                                console.log('exists', row.name)
-                                return resolve(null)
-                            }
-                            exists.push(row.id)
-
-                            if (row.mainFile === null) {
-                                // No main file here, skipping for now
-                                console.log('no main file for', row.name)
-                                return resolve(null)
-                            }
-
-                            // Let's define what we're looking for
-                            let folders = []
-                            if (row.folders && row.folders.length > 0) {
-                                folders = row.folders.map(a => a.name)
-                            } else {
-                                folders.push(row.name)
-                            }
-
-                            // console.log('addon', row.name, folders)
-
-                            let { hash, bank, files } = await getHash(folders)
-
-                            row.meta = {
-                                folder,
-                                localHash: hash
-                            }
-
-                            // console.log('files', files)
-
-                            // console.log('localCrc', bank)
-                            // console.log('remoteCrc', row.mainFile.crc)
-
-                            // let arrA = bank
-                            // let arrB = row.mainFile.crc
-
-                            // let difference = arrA
-                            //     .filter(x => !arrB.includes(x))
-                            //     .concat(arrB.filter(x => !arrA.includes(x)))
-
-                            // console.log('diff', difference)
-
-                            console.log('localHash', row.meta.localHash)
-                            console.log('remoteHash', row.mainFile.hash)
-
-                            _vm.addons.push(row)
-                            resolve(true)
-                        })
-                        .catch((err) => {
-                            console.log('failed fetching - 404 maybe?')
-                            resolve(null)
-                        })
-
-                        // .catch(reject)
-
-                        // .catch(() => {
-                        //     console.log('failed fetching - 404 maybe?')
-                        // })
-                }))
-            })
-
-            Promise.all(fetchPromises)
-                .then((addons) => {
-                    // addons.forEach((addon) => {
-                    //     if (addon === null) {
-                    //         return
-                    //     }
-
-                    //     _vm.addons.push(addon)
-                    // })
-
-                    console.log('all done fetching stuff!')
-
-                    _vm.loading = false
-                })
-                .catch((errors) => {
-                    // Should never reject. But who knows.
-                    console.log('fetchPromises catch', errors)
-                    _vm.loading = false
-                })
         },
-        async onUpdate (index, item) {
-            this.loading = true
+        async handleUpdate (index, item) {
+            this.updating = true
 
             console.log('updating..', item.name)
 
@@ -264,7 +229,6 @@ export default {
                 let addon = res.data.data
 
                 addon.meta = {
-                    folder: item.folder,
                     localHash: addon.mainFile ? addon.mainFile.hash : null
                 }
 
@@ -273,37 +237,52 @@ export default {
                 console.log('failed to update?', err)
             }
 
-            console.log('update process ended')
-
-            this.loading = false
+            this.updating = false
         },
-        async onRemove (index, item) {
-            this.loading = true
+        async handleUpdateAll () {
+            console.log('updating all..')
+        },
+        async handleRemove (index, item) {
+            this.removing = true
 
             console.log('starting to delete some stuff..')
 
-            let deletedPaths = await remove(item)
+            try {
+                let deletedPaths = await remove(item)
 
-            console.log('deleted paths', deletedPaths)
+                console.log('deleted paths', deletedPaths)
 
-            if (deletedPaths.length > 0) {
-                this.$delete(this.addons, index)
+                if (deletedPaths.length > 0) {
+                    this.$delete(this.addons, index)
+                }
+            } catch (err) {
+                console.log('failed to remove?', err)
             }
 
-            this.loading = false
+            this.removing = false
         },
-        getLogoUrl (item) {
-            let media = item.media.filter((obj) => {
-                return obj.collection === 'logo'
-            })
+        sortCompare (aRow, bRow, key, sortDesc, formatter, compareOptions, compareLocale) {
+            const a = aRow[key]
+            const b = bRow[key]
 
-            if (media[0] !== null) {
-                return media[0].links.web
+            // Determine if a or b needs update..
+            // console.log('a', a)
+            // console.log('b', b)
+
+            if (
+                (typeof a === 'number' && typeof b === 'number') ||
+                (a instanceof Date && b instanceof Date)
+            ) {
+                // If both compared fields are native numbers or both are native dates
+                return a < b ? -1 : a > b ? 1 : 0
+            } else {
+                // Otherwise stringify the field data and use String.prototype.localeCompare
+                return toString(a).localeCompare(toString(b), compareLocale, compareOptions)
             }
         }
     },
     mounted () {
-        // this.fetch()
+        this.handleFetch()
     }
 }
 </script>

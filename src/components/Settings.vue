@@ -2,13 +2,18 @@
     <div>
         <b-container fluid>
             <!-- WoW Folder -->
-            <b-input-group>
-                <b-input-group-text slot="prepend">WoW Folder</b-input-group-text>
-                <b-form-input v-model="wowFolder" placeholder="D:\World of Warcraft"></b-form-input>
-                <b-input-group-append>
-                    <b-button text="Browse" variant="secondary" @click="onBrowse">Browse</b-button>
-                </b-input-group-append>
-            </b-input-group>
+            <b-form-group
+                label="Specify your WoW installation folder"
+                label-for="wowFolder"
+            >
+                <b-input-group>
+                    <b-input-group-text slot="prepend">WoW Folder</b-input-group-text>
+                    <b-form-input id="wowFolder" v-model="wowFolder" placeholder="D:\World of Warcraft"></b-form-input>
+                    <b-input-group-append>
+                        <b-button text="Browse" variant="secondary" @click="handleBrowse">Browse</b-button>
+                    </b-input-group-append>
+                </b-input-group>
+            </b-form-group>
         </b-container>
     </div>
 </template>
@@ -25,7 +30,7 @@ export default {
         }
     },
     methods: {
-        async onBrowse () {
+        async handleBrowse () {
             let dir = await dialog.showOpenDialog({
                 properties: ['openDirectory']
             })

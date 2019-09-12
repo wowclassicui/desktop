@@ -1,34 +1,41 @@
 <template>
-  <div id="app">
-    <router-view></router-view>
-  </div>
+    <div id="app">
+        <router-view></router-view>
+    </div>
 </template>
 
 <script>
 export default {
-  name: 'app',
-  created () {
-    this.$http.interceptors.response.use((res) => res, (err) => {
-      if (err.response && err.response.status === 401 && err.config && !err.config.__isRetryRequest) {
-        this.$store.dispatch('auth/logout')
-          .then(() => {
-            this.$router.push('/login')
-          })
-      }
+    name: 'app',
+    created () {
+        this.$http.interceptors.response.use((res) => res, (err) => {
+            if (err.response && err.response.status === 401 && err.config && !err.config.__isRetryRequest) {
+                this.$store.dispatch('auth/logout')
+                .then(() => {
+                    this.$router.push('/login')
+                })
+            }
 
-      return Promise.reject(err)
-    })
-  }
+            return Promise.reject(err)
+        })
+    }
 }
 </script>
 
-<style>
-html, body, #app {
-  height: 100%;
-}
+<style lang="scss">
+@import './assets/variables';
+@import '../node_modules/bootstrap/scss/bootstrap';
+@import '../node_modules/bootstrap-vue/src/index.scss';
+
+html,
+body,
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    height: 100%;
+}
+
+#app {
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 </style>
