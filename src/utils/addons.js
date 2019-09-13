@@ -148,10 +148,9 @@ const scanAddonsDir = (path) => {
             }
 
             let folders = []
-            let statPromises = []
 
-            for (const file of files) {
-                statPromises.push(new Promise((resolve, reject) => {
+            Promise.all(files.map((file) => {
+                return new Promise((resolve, reject) => {
                     fs.stat(join(path, file), (err, stats) => {
                         if (err) {
                             return reject(err)
@@ -163,16 +162,15 @@ const scanAddonsDir = (path) => {
 
                         resolve()
                     })
-                }))
-            }
-
-            Promise.all(statPromises)
+                })
+            }))
             .then(() => {
                 resolve(folders)
             })
-            .catch(() => {
-                resolve([])
-            })
+            // .catch(() => {
+            //     resolve([])
+            // })
+            .catch(resolve)
         })
     })
 }

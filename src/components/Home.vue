@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-navbar type="dark" variant="dark" class="mb-1">
+        <b-navbar type="dark" variant="dark">
             <b-navbar-brand tag="h1" class="mb-0">
                 <img src="@/assets/logo.png" class="d-inline-block align-middle" alt="Classic Warcraft App">
                 Classic Warcraft App

@@ -22,9 +22,9 @@ protocol.registerSchemesAsPrivileged([{
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 800,
+    width: 900,
     height: 600,
-    resizable: false,
+    // resizable: false,
     icon: path.join(__static, 'icon.png'),
     webPreferences: {
       nodeIntegration: true

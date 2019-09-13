@@ -120,11 +120,11 @@ export default {
                     key: 'logo',
                     label: ''
                 },
-                {
-                    key: 'id',
-                    label: '#',
-                    sortable: true
-                },
+                // {
+                //     key: 'id',
+                //     label: '#',
+                //     sortable: true
+                // },
                 {
                     key: 'name',
                     label: 'Name',
@@ -197,8 +197,7 @@ export default {
                 previous
             })
             .then((addons) => {
-                console.log('fetched addons', addons.length)
-
+                // console.log('fetched addons', addons.length)
                 done()
             })
         }

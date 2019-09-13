@@ -8,24 +8,51 @@
         </div>
         <div v-else>
             <!-- Top Actions -->
-            <b-button-toolbar class="my-2">
-                <b-button-group>
-                    <!-- Fetch -->
-                    <b-button @click="handleFetch" :disabled="fetching">
-                        <font-awesome-icon icon="sync" fixed-width :spin="fetching" />
-                        Fetch
-                    </b-button>
-                    <!-- Update -->
-                    <b-button variant="primary" @click="handleUpdateAll" :disabled="updating">
-                        <font-awesome-icon icon="download" fixed-width :pulse="updating" />
-                        Update All
-                    </b-button>
-                </b-button-group>
-            </b-button-toolbar>
+            <div class="d-flex d-flex-row align-items-center d-flex justify-content-between my-2">
+                <b-button-toolbar>
+                    <b-button-group>
+                        <!-- Fetch -->
+                        <b-button @click="handleFetch" :disabled="scanning">
+                            <font-awesome-icon icon="sync" fixed-width :spin="scanning" />
+                            Fetch
+                        </b-button>
+                        <!-- Update -->
+                        <b-button variant="primary" @click="handleUpdateAll" :disabled="updating || needsUpdateCount === 0">
+                            <font-awesome-icon v-if="!updating" icon="download" fixed-width />
+                            <font-awesome-icon v-else icon="circle-notch" fixed-width spin />
+                            Update All
+                        </b-button>
+                    </b-button-group>
+                </b-button-toolbar>
+                <div>
+                    <!-- Looking for updates -->
+                    <div v-if="lookingForUpdates">
+                        <span class="text-secondary">
+                            Looking for updates..
+                            <font-awesome-icon icon="circle-notch" fixed-width spin />
+                        </span>
+                    </div>
+                    <div v-else-if="needsUpdateCount > 0">
+                        <span class="text-secondary">
+                            {{ needsUpdateCount }} update(s) available
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <!-- Search -->
+                    <b-form-input
+                        v-model="filter"
+                        type="search"
+                        size="sm"
+                        id="filterInput"
+                        placeholder="Type to Search"
+                    ></b-form-input>
+                </div>
+            </div>
             <!-- Table -->
             <b-table
                 id="table-addons"
-                sticky-header="400px"
+                sticky-header="410px"
                 striped
                 hover
                 head-variant="light"
@@ -33,10 +60,21 @@
                 show-empty
                 :items="addons"
                 :fields="fields"
+                :busy="scanning"
                 :sort-by.sync="sortBy"
                 :sort-desc.sync="sortDesc"
                 :sort-compare="sortCompare"
+                :filter="filter"
+                :filter-included-fields="filterIncludedFields"
+                filter-debounce="400"
             >
+                <!-- Loading -->
+                <template v-slot:table-busy>
+                    <div class="text-center text-secondary my-2">
+                    <b-spinner class="align-middle mr-1"></b-spinner>
+                    <strong>Fetching..</strong>
+                    </div>
+                </template>
                 <!-- Logo -->
                 <template v-slot:cell(logo)="data">
                     <img
@@ -51,14 +89,15 @@
                     <div class="text-right">
                         <!-- Update -->
                         <b-button
-                            v-if="data.item.mainFile !== null && data.item.mainFile.hash !== data.item.meta.localHash"
+                            v-if="data.item.id in needsUpdate"
                             variant="outline-primary"
                             size="sm"
                             class="mr-1"
                             @click="handleUpdate(data.index, data.item)"
-                            :disabled="updating || fetching"
+                            :disabled="needsUpdate[data.item.id].updating"
                         >
-                            <font-awesome-icon icon="download" size="sm" fixed-width />
+                            <font-awesome-icon v-if="!needsUpdate[data.item.id].updating" icon="download" fixed-width />
+                            <font-awesome-icon v-else icon="circle-notch" fixed-width spin />
                             Update
                         </b-button>
                         <!-- Remove -->
@@ -66,7 +105,7 @@
                             variant="outline-danger"
                             size="sm"
                             @click="handleRemove(data.index, data.item)"
-                            :disabled="removing || fetching"
+                            :disabled="removing"
                         >
                             <font-awesome-icon icon="trash-alt" size="sm" fixed-width />
                         </b-button>
@@ -78,6 +117,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import addons from '../api/addons'
 import addonsMixin from '../mixins/addons'
 import { getWowPath } from '../utils/path'
@@ -87,14 +127,21 @@ import { toString } from '../utils/string'
 export default {
     mixins: [addonsMixin],
     computed: {
+        ...mapGetters({
+            scanning: 'installed/loading',
+            scanned: 'installed/scanned',
+            addons: 'installed/data'
+        }),
         mustSpecifyFolder () {
             return getWowPath() === ''
         }
     },
     data () {
         return {
-            sortBy: 'needs_update',
-            sortDesc: true,
+            sortBy: 'name',
+            sortDesc: false,
+            filter: null,
+            filterIncludedFields: ['name'],
             fields: [
                 {
                     key: 'logo',
@@ -111,20 +158,71 @@ export default {
                     sortable: true
                 },
                 {
-                    key: 'remote_version',
+                    key: 'mainFile.version',
                     label: 'Latest',
-                    key: 'mainFile.version'
                 },
                 {
                     key: 'actions',
                     label: ''
                 }
             ],
-            addons: [],
-            loading: false,
-            fetching: false,
+            needsUpdate: {},
+            needsUpdateCount: 0,
+            lookingForUpdates: false,
             updating: false,
             removing: false
+        }
+    },
+    watch: {
+        addons (to, from) {
+            let _vm = this
+
+            // Looking for updates
+            this.lookingForUpdates = true
+            // Reset needsUpdate array
+            this.needsUpdate = {}
+            this.needsUpdateCount = 0
+            Promise.all(to.map(async (addon, index) => {
+                if (addon.mainFile === null) {
+                    // No main file here, skipping for now
+                    console.log('no main file for', addon.name)
+                    return
+                }
+
+                // Let's define what we're looking for
+                let folders = []
+                if (addon.folders && addon.folders.length > 0) {
+                    folders = addon.folders.map(a => a.name)
+                } else {
+                    folders.push(addon.name)
+                }
+
+                let { hash, crcPool, files } = await getHash(folders)
+
+                let row = {
+                    id: addon.id,
+                    hash
+                }
+
+                if (row.hash !== addon.mainFile.hash) {
+                    _vm.needsUpdate[addon.id] = {
+                        index,
+                        updating: false
+                    }
+                    _vm.needsUpdateCount++
+                }
+
+                return row
+            }))
+            .then((rows) => {
+                // TODO: Toast?
+                this.lookingForUpdates = false
+            })
+            .catch((err) => {
+                // TODO: Toast
+                console.log('looking for updates failure', err)
+                this.lookingForUpdates = false
+            })
         }
     },
     methods: {
@@ -133,114 +231,58 @@ export default {
                 return
             }
 
-            // Reset
-            this.addons = []
-
             let _vm = this
-            this.fetching = true
+            let addonsPath = getAddonsPath()
 
-            try {
-                let addonsPath = getAddonsPath()
-
-                console.log('scanning addons dir..', addonsPath)
-
-                let folders = await scanAddonsDir(addonsPath)
-
-                if (folders.length === 0) {
-                    // Nothing to work with, exiting
-                    return
-                }
-
-                console.log('fetching api for matches..')
-
-                let res = await addons.findAll(folders)
-
-                if (!res.data || res.data.data.length === 0) {
-                    return
-                }
-
-                let promises = []
-                res.data.data.forEach((addon) => {
-                    console.log('scanning', addon.name, addon.folders)
-
-                    promises.push(new Promise(async (resolve, reject) => {
-                        let row = addon
-
-                        if (row.mainFile === null) {
-                            // No main file here, skipping for now
-                            console.log('no main file for', row.name)
-                            return resolve(null)
-                        }
-
-                        // Let's define what we're looking for
-                        let folders = []
-                        if (row.folders && row.folders.length > 0) {
-                            folders = row.folders.map(a => a.name)
-                        } else {
-                            folders.push(row.name)
-                        }
-
-                        let { hash, crcPool, files } = await getHash(folders)
-
-                        row.meta = {
-                            localHash: hash
-                        }
-
-                        // local crc32: crcPool
-                        // remote crc32: row.mainFile.crc
-
-                        console.log('localHash', row.meta.localHash)
-                        console.log('remoteHash', row.mainFile.hash)
-
-                        _vm.addons.push(row)
-                        resolve(row)
-                    }))
-                })
-
-                Promise.all(promises)
-                    .then((addons) => {
-                        console.log('all done fetching stuff!')
-                        _vm.fetching = false
-                    })
-                    .catch((errors) => {
-                        // Should never reject. But who knows.
-                        console.log('fetchPromises catch', errors)
-                        _vm.fetching = false
-                    })
-            } catch (err) {
-                this.fetching = false
-                // throw err // Re-throw
-                console.log('fatal', err)
-            }
+            // Scanning AddOns directory
+            await this.$store.dispatch('installed/scan', addonsPath)
         },
         async handleUpdate (index, item) {
-            this.updating = true
+            if (!(item.id in this.needsUpdate)) {
+                return Promise.resolve()
+            }
+            let row = this.needsUpdate[item.id]
+            if (row.updating) {
+                return Promise.resolve()
+            }
 
             console.log('updating..', item.name)
 
+            row.updating = true
+            let needsUpdate = {}
+            needsUpdate[item.id] = row
+            this.needsUpdate = Object.assign({}, this.needsUpdate, needsUpdate)
+
             try {
                 let result = await update(item)
-
-                console.log('update done, now fetching addon status again')
-
-                let res = await addons.show(item.id, {
-                    include: 'mainFile,folders'
-                })
-                let addon = res.data.data
-
-                addon.meta = {
-                    localHash: addon.mainFile ? addon.mainFile.hash : null
-                }
-
-                this.$set(this.addons, index, addon)
             } catch (err) {
                 console.log('failed to update?', err)
             }
 
-            this.updating = false
+            this.$delete(this.needsUpdate, item.id)
+            this.needsUpdateCount--
+
+            return Promise.resolve()
         },
-        async handleUpdateAll () {
-            console.log('updating all..')
+        handleUpdateAll () {
+            if (this.needsUpdateCount === 0) {
+                return
+            }
+
+            this.updating = true
+            let promises = []
+            Object.values(this.needsUpdate).forEach((row) => {
+                promises.push(this.handleUpdate(row.index, this.addons[row.index]))
+            })
+
+            Promise.all(promises)
+                .then(() => {
+                    console.log('we are done updating!')
+                    this.updating = false
+                })
+                .catch((err) => {
+                    this.updating = false
+                })
         },
         async handleRemove (index, item) {
             this.removing = true
@@ -282,7 +324,9 @@ export default {
         }
     },
     mounted () {
-        this.handleFetch()
+        if (! this.scanned) {
+            this.handleFetch()
+        }
     }
 }
 </script>

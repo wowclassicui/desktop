@@ -11,13 +11,6 @@ export default {
             params
         })
     },
-    // find (name) {
-    //     return axios.get('/addons/find/folder/' + name, {
-    //         params: {
-    //             include: 'mainFile,folders'
-    //         }
-    //     })
-    // },
     findAll (folders) {
         return axios.post('/addons/find/folders', {
             folders: folders.join(','),
