@@ -32,6 +32,12 @@
                             <font-awesome-icon icon="circle-notch" fixed-width spin />
                         </span>
                     </div>
+                    <div v-else-if="updating">
+                        <span class="text-secondary">
+                            Updating..
+                            <font-awesome-icon icon="circle-notch" fixed-width spin />
+                        </span>
+                    </div>
                     <div v-else-if="needsUpdateCount > 0">
                         <span class="text-secondary">
                             {{ needsUpdateCount }} update(s) available
@@ -118,11 +124,11 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import addons from '../api/addons'
 import addonsMixin from '../mixins/addons'
 import { getWowPath } from '../utils/path'
-import { install, update, remove, getHash, getAddonsPath, scanAddonsDir } from '../utils/addons'
+import { update, remove, getHash, getAddonsPath } from '../utils/addons'
 import { toString } from '../utils/string'
+import moment from 'moment'
 
 export default {
     mixins: [addonsMixin],
@@ -162,6 +168,12 @@ export default {
                     label: 'Latest',
                 },
                 {
+                    key: 'mainFile.created_at',
+                    label: 'Updated',
+                    // sortable: true,
+                    formatter: 'toDate'
+                },
+                {
                     key: 'actions',
                     label: ''
                 }
@@ -174,7 +186,7 @@ export default {
         }
     },
     watch: {
-        addons (to, from) {
+        addons (to) {
             let _vm = this
 
             // Looking for updates
@@ -197,7 +209,7 @@ export default {
                     folders.push(addon.name)
                 }
 
-                let { hash, crcPool, files } = await getHash(folders)
+                let { hash } = await getHash(folders)
 
                 let row = {
                     id: addon.id,
@@ -231,7 +243,6 @@ export default {
                 return
             }
 
-            let _vm = this
             let addonsPath = getAddonsPath()
 
             // Scanning AddOns directory
@@ -255,12 +266,11 @@ export default {
 
             try {
                 let result = await update(item)
+                this.$delete(this.needsUpdate, item.id)
+                this.needsUpdateCount--
             } catch (err) {
                 console.log('failed to update?', err)
             }
-
-            this.$delete(this.needsUpdate, item.id)
-            this.needsUpdateCount--
 
             return Promise.resolve()
         },
@@ -277,10 +287,15 @@ export default {
 
             Promise.all(promises)
                 .then(() => {
-                    console.log('we are done updating!')
                     this.updating = false
                 })
                 .catch((err) => {
+                    this.$bvToast.toast('We have had some issues updating your AddOns. Please try again.', {
+                        title: 'Whoops!',
+                        variant: 'warning',
+                        toaster: 'b-toaster-bottom-left',
+                        solid: true
+                    })
                     this.updating = false
                 })
         },
@@ -302,6 +317,9 @@ export default {
             }
 
             this.removing = false
+        },
+        toDate (value) {
+            return moment(value).fromNow()
         },
         sortCompare (aRow, bRow, key, sortDesc, formatter, compareOptions, compareLocale) {
             const a = aRow[key]

@@ -39,9 +39,13 @@ export default {
                 return
             }
 
+            this.$store.commit('installed/reset')
+
             let wowFolder = dir.filePaths[0]
-            store.set('installationFolder', wowFolder)
-            this.wowFolder = wowFolder
+            if (store.get('installaitonFolder') !== wowFolder) {
+                store.set('installationFolder', wowFolder)
+                this.wowFolder = wowFolder
+            }
         }
     },
     mounted () {

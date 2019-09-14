@@ -1,6 +1,3 @@
-import downloads from '../api/downloads'
-// import addons from '../api/addons'
-import crc32 from 'crc/crc32'
 const Store = require('electron-store')
 const store = new Store()
 const unzipper = require('unzipper')
@@ -11,6 +8,8 @@ const remote = require('electron').remote
 const fs = remote.require('fs')
 const path = remote.require('path')
 const { join } = path
+import downloads from '../api/downloads'
+import crc32 from 'crc/crc32'
 
 const update = (addon) => {
     return new Promise((resolve, reject) => {
@@ -228,4 +227,7 @@ const walkdir = (dir, callback) => {
     })
 }
 
-export { install, update, remove, getHash, getAddonsPath, scanAddonsDir }
+export {
+    install, update, remove, getHash,
+    getAddonsPath, scanAddonsDir
+}

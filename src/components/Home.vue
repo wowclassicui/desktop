@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <section id="home">
         <b-navbar type="dark" variant="dark">
             <b-navbar-brand tag="h1" class="mb-0">
                 <img src="@/assets/logo.png" class="d-inline-block align-middle" alt="Classic Warcraft App">
@@ -29,7 +29,7 @@
             </b-navbar-nav>
         </b-navbar>
         <router-view></router-view>
-    </div>
+    </section>
 </template>
 
 <script>

@@ -41,6 +41,10 @@ const mutations = {
         state.scanned = true
         state.loading = false
     },
+    reset (state) {
+        state.data = []
+        state.scanned = false
+    },
     failed (state, { err }) {
         state.err = err
         state.loading = false
