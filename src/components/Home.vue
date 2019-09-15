@@ -9,12 +9,12 @@
                 <!-- Addons -->
                 <b-nav-item :to="{ name: 'addons'}" active-class="active">
                     <font-awesome-icon icon="puzzle-piece" fixed-width />
-                    My AddOns
+                    {{ $t('app.menu.myaddons') }}
                 </b-nav-item>
                 <!-- Browse -->
                 <b-nav-item :to="{ name: 'browse'}" active-class="active">
                     <font-awesome-icon icon="search" fixed-width />
-                    Browse
+                    {{ $t('app.menu.browse') }}
                 </b-nav-item>
                 <!-- User -->
                 <b-nav-item-dropdown right no-caret>
@@ -23,6 +23,7 @@
                     </template>
                     <b-dropdown-item :to="{ name: 'settings'}">Settings</b-dropdown-item>
                     <b-dropdown-item @click="reload">Reload App</b-dropdown-item>
+                    <b-dropdown-item @click="openWebsite">About</b-dropdown-item>
                     <b-dropdown-divider></b-dropdown-divider>
                     <b-dropdown-item @click="logout">Logout</b-dropdown-item>
                 </b-nav-item-dropdown>
@@ -33,7 +34,9 @@
 </template>
 
 <script>
-const { getCurrentWindow } = require('electron').remote
+const remote = require('electron').remote
+const { getCurrentWindow } = remote
+const shell = require('electron').shell
 
 export default {
     data () {
@@ -50,6 +53,9 @@ export default {
         },
         reload () {
             getCurrentWindow().reload()
+        },
+        openWebsite () {
+            shell.openExternal('https://classic-warcraft.com/about')
         }
     },
     created () {
