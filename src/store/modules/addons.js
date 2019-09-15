@@ -20,26 +20,31 @@ const getters = {
 }
 
 const actions = {
-    fetch ({ commit }, { limit, cursor, previous }) {
+    fetch ({ commit }, { limit, cursor, previous, search, category }) {
         return new Promise((resolve, reject) => {
             commit('loading')
-
-            // console.log('params', cursor, previous)
 
             addons.index({
                 limit,
                 cursor,
                 previous,
+                search,
+                category_id: category,
                 include: 'mainFile,folders,category'
             })
                 .then((res) => {
                     let addons = res.data.data
-                    let cursor = res.data.cursor
 
                     if (cursor === 0) {
-                        commit('set', { addons, cursor })
+                        commit('set', {
+                            addons: res.data.data,
+                            cursor: res.data.cursor
+                        })
                     } else {
-                        commit('append', { addons, cursor })
+                        commit('append', {
+                            addons: res.data.data,
+                            cursor: res.data.cursor
+                        })
                     }
 
                     resolve(addons)

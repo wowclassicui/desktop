@@ -26,6 +26,7 @@
     "crc": "^3.8.0",
     "del": "^5.1.0",
     "electron-store": "^4.0.0",
+    "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "regedit": "^3.0.3",
     "unzipper": "^0.10.5",

@@ -187,6 +187,25 @@ export default {
     },
     watch: {
         addons (to) {
+            this.lookForUpdates(to)
+        }
+    },
+    methods: {
+        async handleFetch () {
+            if (this.mustSpecifyFolder) {
+                return
+            }
+
+            let addonsPath = getAddonsPath()
+
+            // Scanning AddOns directory
+            await this.$store.dispatch('installed/scan', addonsPath)
+        },
+        lookForUpdates (addons) {
+            if (this.lookingForUpdates) {
+                return
+            }
+
             let _vm = this
 
             // Looking for updates
@@ -194,7 +213,7 @@ export default {
             // Reset needsUpdate array
             this.needsUpdate = {}
             this.needsUpdateCount = 0
-            Promise.all(to.map(async (addon, index) => {
+            Promise.all(addons.map(async (addon, index) => {
                 if (addon.mainFile === null) {
                     // No main file here, skipping for now
                     console.log('no main file for', addon.name)
@@ -227,26 +246,17 @@ export default {
                 return row
             }))
             .then((rows) => {
-                // TODO: Toast?
                 this.lookingForUpdates = false
             })
             .catch((err) => {
-                // TODO: Toast
-                console.log('looking for updates failure', err)
+                this.$bvToast.toast('Could not look for updates. Please try again.', {
+                    title: 'Whoops!',
+                    variant: 'warning',
+                    toaster: 'b-toaster-bottom-left',
+                    solid: true
+                })
                 this.lookingForUpdates = false
             })
-        }
-    },
-    methods: {
-        async handleFetch () {
-            if (this.mustSpecifyFolder) {
-                return
-            }
-
-            let addonsPath = getAddonsPath()
-
-            // Scanning AddOns directory
-            await this.$store.dispatch('installed/scan', addonsPath)
         },
         async handleUpdate (index, item) {
             if (!(item.id in this.needsUpdate)) {
@@ -269,7 +279,12 @@ export default {
                 this.$delete(this.needsUpdate, item.id)
                 this.needsUpdateCount--
             } catch (err) {
-                console.log('failed to update?', err)
+                this.$bvToast.toast('Could not update ' + item.name + '. Please try again.', {
+                    title: 'Whoops!',
+                    variant: 'warning',
+                    toaster: 'b-toaster-bottom-left',
+                    solid: true
+                })
             }
 
             return Promise.resolve()
@@ -343,7 +358,11 @@ export default {
     },
     mounted () {
         if (! this.scanned) {
+            // Automatically start 1st addons scan
             this.handleFetch()
+        } else {
+            // Only look for updates once scan is done
+            this.lookForUpdates(this.addons)
         }
     }
 }

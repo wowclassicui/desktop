@@ -1,32 +1,36 @@
 <template>
     <b-container fluid>
-        <b-row>
+        <b-row align-v="center" class="my-2">
             <!-- Filter -->
-            <b-col md="6" class="my-1">
+            <b-col sm="6" md="4">
                 <b-form-group
-                    class="mb-0"
+                    class="mb-0 mb-2 mb-sm-0"
                 >
-                    <b-input-group size="sm">
-                        <b-form-input
-                            v-model="filter"
-                            type="search"
-                            placeholder="Type to Search"
-                        ></b-form-input>
-                        <b-input-group-append>
-                            <b-button :disabled="!filter" @click="filter = ''">Clear</b-button>
-                        </b-input-group-append>
-                    </b-input-group>
+                    <b-form-input
+                        v-model="filter"
+                        type="search"
+                        size="sm"
+                        placeholder="Type to Search"
+                    ></b-form-input>
                 </b-form-group>
             </b-col>
+            <b-col class="d-sm-none d-md-block md-4">
+                <div class="text-center text-secondary">
+                    <div v-if="searching">
+                        Searching
+                        <font-awesome-icon icon="circle-notch" fixed-width spin />
+                    </div>
+                </div>
+            </b-col>
             <!-- Category -->
-            <b-col md="6" class="my-1">
+            <b-col sm="6" md="4">
                 <b-form-group
                     class="mb-0"
                 >
                     <b-form-select
                         v-model="category"
                         size="sm"
-                        @change="onCategoryChange"
+                        @change="handleCategoryChange"
                     >
                         <option :value="null">Select a Category</option>
                         <option
@@ -48,7 +52,9 @@
             show-empty
             :items="items"
             :fields="fields"
-            :busy="firstLoading"
+            :busy="busy"
+            :sort-by.sync="sortBy"
+            :sort-desc.sync="sortDesc"
         >
             <!-- Loading -->
             <template v-slot:table-busy>
@@ -68,24 +74,27 @@
             </template>
             <!-- Actions -->
             <template v-slot:cell(actions)="data">
-                <b-button-toolbar>
-                    <b-button-group>
-                        <!-- Install -->
-                        <b-button
-                            v-if="data.item.mainFile !== null"
-                            size="sm"
-                            @click="handleInstall(data.index, data.item)"
-                            :disabled="loading || installing"
-                        >Install</b-button>
-                    </b-button-group>
-                </b-button-toolbar>
+                <div class="text-right">
+                    <!-- Install -->
+                    <b-button
+                        v-if="canInstall(data.item)"
+                        size="sm"
+                        variant="outline-primary"
+                        @click="handleInstall(data.index, data.item)"
+                        :disabled="loading || installing"
+                    >
+                        <font-awesome-icon icon="download" fixed-width />
+                        Install
+                    </b-button>
+                </div>
             </template>
         </b-table>
         <!-- Pagination -->
         <b-button-group>
             <b-button @click="onMore" :disabled="loading || loadingMore || cursor.next === null">
-                <font-awesome-icon v-if="loadingMore" icon="sync" spin />
-                More
+                <b-spinner v-if="loadingMore" small type="grow" class="mr-1"></b-spinner>
+                <span v-if="cursor.next !== null">More</span>
+                <span v-else>No more</span>
             </b-button>
         </b-button-group>
     </b-container>
@@ -96,6 +105,7 @@ import { mapGetters } from 'vuex'
 import addonsMixin from '../mixins/addons'
 import { install } from '../utils/addons'
 import categoriesApi from '../api/categories'
+import { debounce } from 'lodash'
 
 export default {
     mixins: [addonsMixin],
@@ -104,27 +114,19 @@ export default {
             items: 'addons/data',
             loading: 'addons/loading',
             cursor: 'addons/cursor',
-            previous: 'addons/previous'
+            previous: 'addons/previous',
+            installed: 'installed/data'
         })
     },
-    // watch: {
-    //     cursor (to, from) {
-    //         console.log('to', to)
-    //         console.log('from', from)
-    //     }
-    // },
     data () {
         return {
+            sortBy: 'downloads',
+            sortDesc: true,
             fields: [
                 {
                     key: 'logo',
                     label: ''
                 },
-                // {
-                //     key: 'id',
-                //     label: '#',
-                //     sortable: true
-                // },
                 {
                     key: 'name',
                     label: 'Name',
@@ -153,23 +155,25 @@ export default {
             filter: '',
             category: null,
             categories: [],
-            firstLoading: false,
+            busy: false,
+            searching: false,
             loadingMore: false,
             installing: false
         }
     },
+    watch: {
+        filter: debounce (function (e) {
+            let _vm = this
+            this.searching = true
+            this.fetch(0, null, () => {
+                _vm.searching = false
+            })
+        }, 500)
+    },
     methods: {
         onMore () {
-            // console.log('before', {
-            //     cursor: this.cursor.current,
-            //     previous: this.cursor.previous
-            // })
             let cursor = this.cursor.next
             let previous = this.cursor.current
-            // console.log('after', {
-            //     cursor,
-            //     previous
-            // })
 
             let _vm = this
             _vm.loadingMore = true
@@ -178,8 +182,31 @@ export default {
                 _vm.loadingMore = false
             })
         },
-        onCategoryChange (value) {
+        handleCategoryChange (value) {
+            let _vm = this
+            this.busy = true
+            this.fetch(0, null, () => {
+                _vm.busy = false
+            })
+        },
+        canInstall (item) {
+            // console.log('canInstall id', item.id)
 
+            if (item.mainFile === null) {
+                return false
+            }
+
+            let id = item.id
+
+            let found = this.installed.find((element) => {
+                if (element.id === id) {
+                    return true
+                }
+            })
+
+            // If undefined, this means the addon is no yet installed,
+            // therefor we are allowing to install it
+            return found === undefined
         },
         async handleInstall (index, item) {
             if (!item.mainFile.id) {
@@ -194,10 +221,11 @@ export default {
             this.$store.dispatch('addons/fetch', {
                 limit: this.limit,
                 cursor,
-                previous
+                previous,
+                search: this.filter,
+                category: this.category
             })
             .then((addons) => {
-                // console.log('fetched addons', addons.length)
                 done()
             })
         }
@@ -206,9 +234,9 @@ export default {
         // Fetch only if we don't have any addons
         if (this.cursor.current === null) {
             let _vm = this
-            _vm.firstLoading = true
+            _vm.busy = true
             this.fetch(0, null, () => {
-                _vm.firstLoading = false
+                _vm.busy = false
             })
         }
     },
