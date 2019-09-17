@@ -67,9 +67,8 @@
                     </b-form-group>
                 </b-col>
             </b-row>
-            <b-row>
+            <!-- <b-row>
                 <b-col cols="6">
-                    <!-- Channel -->
                     <b-form-group
                         label="Select the update channel"
                         label-for="channel"
@@ -81,7 +80,7 @@
                         ></b-form-select>
                     </b-form-group>
                 </b-col>
-            </b-row>
+            </b-row> -->
             <hr>
             <b-row>
                 <b-col cols="6">
@@ -124,12 +123,12 @@ export default {
                 { value: 3, text: 'every day' },
                 { value: 4, text: 'every week' }
             ],
-            channel: 'release',
-            channelOptions: [
-                { value: 'release', text: 'Release (recommended)' },
-                { value: 'beta', text: 'Beta' },
-                { value: 'alpha', text: 'Alpha' }
-            ],
+            // channel: 'release',
+            // channelOptions: [
+            //     { value: 'release', text: 'Release (recommended)' },
+            //     { value: 'beta', text: 'Beta' },
+            //     { value: 'alpha', text: 'Alpha' }
+            // ],
             langs: [
                 { value: 'en', text: 'English' },
                 { value: 'fr', text: 'Français'}
@@ -149,9 +148,9 @@ export default {
         interval (to, from) {
             store.set('checkInterval', to)
         },
-        channel (to, from) {
-            store.set('channel', to)
-        },
+        // channel (to, from) {
+        //     store.set('channel', to)
+        // },
         '$i18n.locale' (to, from) {
             store.set('locale', to)
         }
@@ -203,7 +202,7 @@ export default {
 
         this.lookForUpdates = store.get('lookForUpdates', true)
         this.interval = store.get('checkInterval', 3)
-        this.channel = store.get('channel', 'release')
+        // this.channel = store.get('channel', 'release')
         if (store.has('locale')) {
             this.$i18n.locale = store.get('locale')
         }
