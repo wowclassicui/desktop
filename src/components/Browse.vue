@@ -214,7 +214,9 @@ export default {
             }
 
             this.installing = true
-            let res = await install(item.mainFile.id)
+            let resolved = await install(item.mainFile.id)
+
+            this.$store.commit('installed/add', item)
             this.installing = false
         },
         fetch (cursor, previous, done) {

@@ -3,20 +3,23 @@ const path = require('path')
 const Store = require('electron-store')
 const store = new Store()
 
-const getWowPath = async () => {
+const initWowPath = async () => {
     if (!store.has('installationFolder')) {
         const installationFolder = await wowDefaultPath()
-        if (installationFolder !== null) {
-            store.set('installationFolder', installationFolder)
-        }
+        store.set('installationFolder', installationFolder)
     }
 
-    return store.get('installationFolder')
+    return store.get('installationFolder', null)
 }
 
 const wowDefaultPath = () => {
     return new Promise((resolve, reject) => {
         if (process.platform !== 'win32') {
+            return resolve(null)
+        }
+
+        // Fallback to null if env !== prod
+        if (process.env.NODE_ENV !== 'production') {
             return resolve(null)
         }
 
@@ -34,4 +37,4 @@ const wowDefaultPath = () => {
     })
 }
 
-export { getWowPath, wowDefaultPath }
+export { initWowPath, wowDefaultPath }

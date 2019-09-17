@@ -2,8 +2,8 @@
     <b-container fluid>
         <div v-if="mustSpecifyFolder">
             <b-alert show variant="warning">
-                Please specify your WoW Classic installation folder.
-                Check out <a href="#" @click.prevent="$router.push('settings')">Settings</a>.
+                Please specify your WoW installation folder.
+                Go to <a href="#" @click.prevent="$router.push('settings')">Settings</a>.
             </b-alert>
         </div>
         <div v-else>
@@ -125,7 +125,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import addonsMixin from '../mixins/addons'
-import { getWowPath } from '../utils/path'
+import { initWowPath } from '../utils/path'
 import { update, remove, getHash, getAddonsPath } from '../utils/addons'
 import { toString } from '../utils/string'
 import moment from 'moment'
@@ -139,7 +139,7 @@ export default {
             addons: 'installed/data'
         }),
         mustSpecifyFolder () {
-            return getWowPath() === ''
+            return getAddonsPath() === ''
         }
     },
     data () {
@@ -357,6 +357,8 @@ export default {
         }
     },
     mounted () {
+        initWowPath()
+
         if (! this.scanned) {
             // Automatically start 1st addons scan
             this.handleFetch()

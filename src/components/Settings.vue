@@ -168,33 +168,39 @@ export default {
 
             this.$store.commit('installed/reset')
 
-            let wowFolder = dir.filePaths[0]
+            this.wowFolder = dir.filePaths[0]
 
-            if (store.get('installationFolder') === wowFolder) {
-                return
-            }
+            this.wowFolderIsValid = await this.checkWowFolder()
 
-            const executablePath = path.resolve(wowFolder, '_classic_', 'Wow.exe')
-            const isValid = fs.existsSync(executablePath)
-
-            if (!isValid) {
-                this.wowFolderIsValid = false
+            if (!this.wowFolderIsValid) {
                 store.delete('installationFolder')
                 return
             }
 
-            this.wowFolderIsValid = true
-            this.wowFolder = wowFolder
-            store.set('installationFolder', wowFolder)
+            store.set('installationFolder', this.wowFolder)
         },
         initLoginItemSettings () {
             const settings = app.getLoginItemSettings()
             this.openAtLogin = settings.openAtLogin
+        },
+        async checkWowFolder () {
+            if (this.wowFolder === null) {
+                return Promise.resolve(false)
+            }
+
+            const executablePath = path.resolve(this.wowFolder, '_classic_', 'Wow.exe')
+
+            return new Promise((resolve, reject) => {
+                fs.access(executablePath, (err) => {
+                    resolve(err ? false : true)
+                })
+            })
         }
     },
     mounted () {
-        // TODO: Init those values at first launch
-        this.wowFolder = store.get('installationFolder')
+        // TODO: Init those values at first launch?
+        this.wowFolder = store.get('installationFolder', null)
+
         this.lookForUpdates = store.get('lookForUpdates', true)
         this.interval = store.get('checkInterval', 3)
         this.channel = store.get('channel', 'release')
@@ -202,6 +208,10 @@ export default {
             this.$i18n.locale = store.get('locale')
         }
         this.initLoginItemSettings()
+
+        this.checkWowFolder().then((isValid) => {
+            this.wowFolderIsValid = isValid
+        })
     }
 }
 </script>

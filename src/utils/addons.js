@@ -126,8 +126,14 @@ const getHash = (folders) => {
 }
 
 const getAddonsPath = () => {
+    const installationFolder = store.get('installationFolder', null)
+
+    if (installationFolder === null) {
+        return ''
+    }
+
     return path.resolve(
-        store.get('installationFolder'),
+        installationFolder,
         '_classic_',
         'Interface',
         'AddOns'
