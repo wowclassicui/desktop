@@ -216,7 +216,7 @@ export default {
             Promise.all(addons.map(async (addon, index) => {
                 if (addon.mainFile === null) {
                     // No main file here, skipping for now
-                    console.log('no main file for', addon.name)
+                    // console.log('no main file for', addon.name)
                     return
                 }
 
@@ -267,7 +267,7 @@ export default {
                 return Promise.resolve()
             }
 
-            console.log('updating..', item.name)
+            // console.log('updating..', item.name)
 
             row.updating = true
             let needsUpdate = {}
@@ -315,20 +315,38 @@ export default {
                 })
         },
         async handleRemove (index, item) {
-            this.removing = true
+            const confirm = await this.$bvModal.msgBoxConfirm('Please confirm that you want to delete ' + item.name + '.', {
+                title: 'Please Confirm',
+                size: 'sm',
+                buttonSize: 'sm',
+                okVariant: 'danger',
+                okTitle: 'YES',
+                cancelTitle: 'NO',
+                footerClass: 'p-2',
+                hideHeaderClose: false,
+                centered: true
+            })
 
-            console.log('starting to delete some stuff..')
+            if (!confirm) {
+                return
+            }
+
+            this.removing = true
 
             try {
                 let deletedPaths = await remove(item)
-
-                console.log('deleted paths', deletedPaths)
+                // console.log('deleted paths', deletedPaths)
 
                 if (deletedPaths.length > 0) {
-                    this.$delete(this.addons, index)
+                    this.$store.commit('installed/remove', item)
                 }
             } catch (err) {
-                console.log('failed to remove?', err)
+                this.$bvToast.toast('Could not delete ' + item.name + '. Please try again.', {
+                    title: 'Whoops!',
+                    variant: 'warning',
+                    toaster: 'b-toaster-bottom-left',
+                    solid: true
+                })
             }
 
             this.removing = false

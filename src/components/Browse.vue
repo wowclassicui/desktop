@@ -163,7 +163,7 @@ export default {
     },
     watch: {
         filter: debounce (function (e) {
-            let _vm = this
+            const _vm = this
             this.searching = true
             this.fetch(0, null, () => {
                 _vm.searching = false
@@ -172,10 +172,10 @@ export default {
     },
     methods: {
         onMore () {
-            let cursor = this.cursor.next
-            let previous = this.cursor.current
+            const cursor = this.cursor.next
+            const previous = this.cursor.current
 
-            let _vm = this
+            const _vm = this
             _vm.loadingMore = true
             this.fetch(cursor, previous, () => {
                 // done
@@ -183,7 +183,7 @@ export default {
             })
         },
         handleCategoryChange (value) {
-            let _vm = this
+            const _vm = this
             this.busy = true
             this.fetch(0, null, () => {
                 _vm.busy = false
@@ -196,9 +196,9 @@ export default {
                 return false
             }
 
-            let id = item.id
+            const id = item.id
 
-            let found = this.installed.find((element) => {
+            const found = this.installed.find((element) => {
                 if (element.id === id) {
                     return true
                 }
@@ -214,7 +214,7 @@ export default {
             }
 
             this.installing = true
-            let resolved = await install(item.mainFile.id)
+            const resolved = await install(item.mainFile.id)
 
             this.$store.commit('installed/add', item)
             this.installing = false
@@ -233,14 +233,11 @@ export default {
         }
     },
     mounted () {
-        // Fetch only if we don't have any addons
-        if (this.cursor.current === null) {
-            let _vm = this
-            _vm.busy = true
-            this.fetch(0, null, () => {
-                _vm.busy = false
-            })
-        }
+        const _vm = this
+        _vm.busy = true
+        this.fetch(0, null, () => {
+            _vm.busy = false
+        })
     },
     created () {
         categoriesApi.index()

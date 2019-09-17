@@ -41,6 +41,13 @@ const mutations = {
         state.scanned = true
         state.loading = false
     },
+    add (state, addon) {
+        state.data.push(addon)
+    },
+    remove (state, addon) {
+        const index = state.data.map((e) => { return e.id }).indexOf(addon.id)
+        state.data.splice(index, 1)
+    },
     reset (state) {
         state.data = []
         state.scanned = false
