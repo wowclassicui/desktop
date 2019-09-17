@@ -58,7 +58,7 @@
         >
             <!-- Loading -->
             <template v-slot:table-busy>
-                <div class="text-center text-secondary my-2">
+                <div class="text-center text-secondary my-4">
                 <b-spinner class="align-middle mr-1"></b-spinner>
                 <strong>Loading...</strong>
                 </div>
@@ -83,7 +83,8 @@
                         @click="handleInstall(data.index, data.item)"
                         :disabled="loading || installing"
                     >
-                        <font-awesome-icon icon="download" fixed-width />
+                        <font-awesome-icon v-if="isInstallingAddon(data.item)" icon="circle-notch" fixed-width spin />
+                        <font-awesome-icon v-else icon="download" fixed-width />
                         Install
                     </b-button>
                 </div>
@@ -158,7 +159,8 @@ export default {
             busy: false,
             searching: false,
             loadingMore: false,
-            installing: false
+            installing: false,
+            installingId: null
         }
     },
     watch: {
@@ -190,8 +192,6 @@ export default {
             })
         },
         canInstall (item) {
-            // console.log('canInstall id', item.id)
-
             if (item.mainFile === null) {
                 return false
             }
@@ -208,15 +208,22 @@ export default {
             // therefor we are allowing to install it
             return found === undefined
         },
+        isInstallingAddon (item) {
+            return this.installingId === item.id
+        },
         async handleInstall (index, item) {
             if (!item.mainFile.id) {
                 return
             }
 
             this.installing = true
+            this.installingId = item.id
+
             const resolved = await install(item.mainFile.id)
 
             this.$store.commit('installed/add', item)
+
+            this.installingId = null
             this.installing = false
         },
         fetch (cursor, previous, done) {

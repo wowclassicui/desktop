@@ -1,7 +1,7 @@
 <template>
     <b-container fluid>
         <div v-if="mustSpecifyFolder">
-            <b-alert show variant="warning">
+            <b-alert class="my-2" show variant="warning">
                 Please specify your WoW installation folder.
                 Go to <a href="#" @click.prevent="$router.push('settings')">Settings</a>.
             </b-alert>
@@ -76,7 +76,7 @@
             >
                 <!-- Loading -->
                 <template v-slot:table-busy>
-                    <div class="text-center text-secondary my-2">
+                    <div class="text-center text-secondary my-4">
                     <b-spinner class="align-middle mr-1"></b-spinner>
                     <strong>Fetching..</strong>
                     </div>
@@ -118,17 +118,21 @@
                     </div>
                 </template>
             </b-table>
+            <!-- Footer -->
+            <div v-if="!scanning" class="text-center text-secondary">
+                {{ addons.length }} AddOn(s)
+            </div>
         </div>
     </b-container>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import moment from 'moment'
 import addonsMixin from '../mixins/addons'
 import { initWowPath } from '../utils/path'
 import { update, remove, getHash, getAddonsPath } from '../utils/addons'
 import { toString } from '../utils/string'
-import moment from 'moment'
 
 export default {
     mixins: [addonsMixin],
