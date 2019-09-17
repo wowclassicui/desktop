@@ -7,7 +7,11 @@
                 label-for="wowFolder"
             >
                 <b-input-group>
-                    <b-input-group-text slot="prepend">WoW Folder</b-input-group-text>
+                    <b-input-group-text slot="prepend">
+                        <font-awesome-icon v-if="wowFolderIsValid" icon="check-circle" fixed-width class="text-success" />
+                        <font-awesome-icon v-else icon="times-circle" fixed-width class="text-danger" />
+                        WoW Folder
+                    </b-input-group-text>
                     <b-form-input
                         id="wowFolder"
                         v-model="wowFolder"
@@ -18,12 +22,10 @@
                     </b-input-group-append>
                 </b-input-group>
             </b-form-group>
-
             <hr>
-
             <!-- Open At Login -->
             <b-form-group
-                label="Run at Startup (hidden)"
+                label="Should the app launch at startup? (hidden)"
                 label-for="openAtLogin"
             >
                 <b-form-checkbox
@@ -31,12 +33,10 @@
                     v-model="openAtLogin"
                     name="openAtLogin"
                 >
-                Run at Startup
+                Run at startup
                 </b-form-checkbox>
             </b-form-group>
-
             <hr>
-
             <b-row>
                 <b-col>
                     <!-- Look for updates -->
@@ -67,9 +67,22 @@
                     </b-form-group>
                 </b-col>
             </b-row>
-
+            <b-row>
+                <b-col cols="6">
+                    <!-- Channel -->
+                    <b-form-group
+                        label="Select the update channel"
+                        label-for="channel"
+                    >
+                        <b-form-select
+                            id="channel"
+                            v-model="channel"
+                            :options="channelOptions"
+                        ></b-form-select>
+                    </b-form-group>
+                </b-col>
+            </b-row>
             <hr>
-
             <b-row>
                 <b-col cols="6">
                     <!-- Locale -->
@@ -85,7 +98,6 @@
                     </b-form-group>
                 </b-col>
             </b-row>
-
         </b-container>
     </div>
 </template>
@@ -93,12 +105,16 @@
 <script>
 const Store = require('electron-store')
 const store = new Store()
-const { app, dialog } = require('electron').remote
+const remote = require('electron').remote
+const { app, dialog } = remote
+const fs = remote.require('fs')
+const path = remote.require('path')
 
 export default {
     data () {
         return {
             wowFolder: '',
+            wowFolderIsValid: true,
             openAtLogin: false,
             lookForUpdates: true,
             interval: 3,
@@ -107,6 +123,12 @@ export default {
                 { value: 2, text: 'every 12 hours' },
                 { value: 3, text: 'every day' },
                 { value: 4, text: 'every week' }
+            ],
+            channel: 'release',
+            channelOptions: [
+                { value: 'release', text: 'Release (recommended)' },
+                { value: 'beta', text: 'Beta' },
+                { value: 'alpha', text: 'Alpha' }
             ],
             langs: [
                 { value: 'en', text: 'English' },
@@ -127,8 +149,10 @@ export default {
         interval (to, from) {
             store.set('checkInterval', to)
         },
+        channel (to, from) {
+            store.set('channel', to)
+        },
         '$i18n.locale' (to, from) {
-            console.log('waaatch', to)
             store.set('locale', to)
         }
     },
@@ -145,10 +169,23 @@ export default {
             this.$store.commit('installed/reset')
 
             let wowFolder = dir.filePaths[0]
-            if (store.get('installaitonFolder') !== wowFolder) {
-                store.set('installationFolder', wowFolder)
-                this.wowFolder = wowFolder
+
+            if (store.get('installationFolder') === wowFolder) {
+                return
             }
+
+            const executablePath = path.resolve(wowFolder, '_classic_', 'Wow.exe')
+            const isValid = fs.existsSync(executablePath)
+
+            if (!isValid) {
+                this.wowFolderIsValid = false
+                store.delete('installationFolder')
+                return
+            }
+
+            this.wowFolderIsValid = true
+            this.wowFolder = wowFolder
+            store.set('installationFolder', wowFolder)
         },
         initLoginItemSettings () {
             const settings = app.getLoginItemSettings()
@@ -160,6 +197,7 @@ export default {
         this.wowFolder = store.get('installationFolder')
         this.lookForUpdates = store.get('lookForUpdates', true)
         this.interval = store.get('checkInterval', 3)
+        this.channel = store.get('channel', 'release')
         if (store.has('locale')) {
             this.$i18n.locale = store.get('locale')
         }
