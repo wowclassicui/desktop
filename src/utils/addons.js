@@ -8,8 +8,9 @@ const remote = require('electron').remote
 const fs = remote.require('fs')
 const path = remote.require('path')
 const { join } = path
-import downloads from '../api/downloads'
+const glob = require('glob')
 import crc32 from 'crc/crc32'
+import downloads from '../api/downloads'
 
 const update = (addon) => {
     return new Promise((resolve, reject) => {
@@ -78,13 +79,13 @@ const remove = (addon) => {
 
 const getHash = (folders) => {
     return new Promise((resolve, reject) => {
-        let addonsPath = getAddonsPath()
+        const addonsPath = getAddonsPath()
 
         let walkPromises = []
         folders.forEach((folder) => {
-            let folderPath = path.resolve(addonsPath, folder)
+            const folderPath = path.join(addonsPath, folder)
 
-            walkPromises.push(walkdirPromise(folderPath))
+            walkPromises.push(walkdir(folderPath))
         });
 
         Promise.all(walkPromises)
@@ -113,11 +114,12 @@ const getHash = (folders) => {
                     return 0
                 })
 
-                let shasum = crypto.createHash('sha1')
-                shasum.update(pool.join(''))
-                let hash = shasum.digest('hex')
+                let sha = crypto.createHash('sha1')
+                sha.update(pool.join(''))
+                const hash = sha.digest('hex')
 
-                resolve({ hash, pool, files })
+                // resolve({ hash, pool, files })
+                resolve({ hash })
             })
             .catch(reject)
         })
@@ -180,57 +182,60 @@ const scanAddonsDir = (path) => {
     })
 }
 
-const walkdirPromise = (dir) => {
-    return new Promise((resolve/* , reject */) => {
-        walkdir(dir, (err, files) => {
-            if (err) {
-                // return reject(err)
-                return resolve([]) // Mute "folder not found"
-            }
-
-            resolve(files)
-        })
-    })
-}
-
-const walkdir = (dir, callback) => {
-    let results = []
-
-    fs.readdir(dir, (err, files) => {
-        if (err) {
-            return callback(err)
-        }
-
-        let pending = files.length
-        if (!pending) {
-            return callback(null, results)
-        }
-
-        files.forEach((file) => {
-            file = path.resolve(dir, file)
-            fs.stat(file, (err, stat) => {
-                if (stat && stat.isDirectory()) {
-                    walkdir(file, (err, res) => {
-                        results = results.concat(res)
-
-                        if (!--pending) {
-                            callback(null, results)
-                        }
-                    })
-                } else {
-                    // We only want dot lua files
-                    if (file.endsWith('.lua')) {
-                        results.push(file)
-                    }
-                    // results.push(file)
-
-                    if (!--pending) {
-                        callback(null, results)
-                    }
-                }
+const walkdir = (dir) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const files = glob.sync('/**/*.lua', {
+                root: dir
             })
-        })
+            return resolve(files)
+        } catch (err) {
+            reject(err)
+        }
     })
+
+    // return new Promise((resolve, reject) => {
+    //     fs.readdir(dir, (err, files) => {
+    //         if (err) {
+    //             return reject(err)
+    //         }
+
+    //         Promise.all(files.map((file) => {
+
+    //             // STAT SYNC
+    //             // return new Promise((resolve, reject) => {
+    //             //     const filepath = path.join(dir, file)
+
+    //             //     const stats = fs.statSync(filepath)
+
+    //             //     if (stats.isDirectory()) {
+    //             //         walkdir(filepath).then(resolve)
+    //             //     } else if (stats.isFile()) {
+    //             //         resolve(filepath)
+    //             //     }
+    //             // })
+
+    //             // STAT ASYNC
+    //             // return new Promise((resolve, reject) => {
+    //             //     const filepath = path.join(dir, file)
+    //             //     fs.stat(filepath, (err, stats) => {
+    //             //         if (err) {
+    //             //             return reject(err)
+    //             //         }
+
+    //             //         if (stats.isDirectory()) {
+    //             //             walkdir(filepath).then(resolve)
+    //             //         } else if (stats.isFile()) {
+    //             //             resolve(filepath)
+    //             //         }
+    //             //     })
+    //             // })
+    //         }))
+    //         .then((foldersContents) => {
+    //             resolve(foldersContents.reduce((all, folderContents) => all.concat(folderContents), []))
+    //         })
+    //     })
+    // })
 }
 
 export {

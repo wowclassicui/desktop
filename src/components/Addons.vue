@@ -202,57 +202,61 @@ export default {
 
             let addonsPath = getAddonsPath()
 
+            this.needsUpdate = {}
+            this.needsUpdateCount = 0
+
             // Scanning AddOns directory
             await this.$store.dispatch('installed/scan', addonsPath)
         },
-        lookForUpdates (addons) {
+        async lookForUpdates (addons) {
             if (this.lookingForUpdates) {
                 return
             }
 
-            let _vm = this
+            const _vm = this
 
             // Looking for updates
             this.lookingForUpdates = true
             // Reset needsUpdate array
             this.needsUpdate = {}
             this.needsUpdateCount = 0
-            Promise.all(addons.map(async (addon, index) => {
-                if (addon.mainFile === null) {
-                    // No main file here, skipping for now
-                    // console.log('no main file for', addon.name)
-                    return
-                }
 
-                // Let's define what we're looking for
-                let folders = []
-                if (addon.folders && addon.folders.length > 0) {
-                    folders = addon.folders.map(a => a.name)
-                } else {
-                    folders.push(addon.name)
-                }
-
-                let { hash } = await getHash(folders)
-
-                let row = {
-                    id: addon.id,
-                    hash
-                }
-
-                if (row.hash !== addon.mainFile.hash) {
-                    _vm.needsUpdate[addon.id] = {
-                        index,
-                        updating: false
+            try {
+                const res = await Promise.all(addons.map(async (addon, index) => {
+                    if (addon.mainFile === null) {
+                        // No main file here, skipping for now
+                        // console.log('no main file for', addon.name)
+                        return
                     }
-                    _vm.needsUpdateCount++
-                }
 
-                return row
-            }))
-            .then((rows) => {
+                    // Let's define what we're looking for
+                    let folders = []
+                    if (addon.folders && addon.folders.length > 0) {
+                        folders = addon.folders.map(a => a.name)
+                    } else {
+                        folders.push(addon.name)
+                    }
+
+                    const { hash } = await getHash(folders)
+
+                    const row = {
+                        id: addon.id,
+                        hash
+                    }
+
+                    if (row.hash !== addon.mainFile.hash) {
+                        _vm.needsUpdate[addon.id] = {
+                            index,
+                            updating: false
+                        }
+                        _vm.needsUpdateCount++
+                    }
+
+                    return row
+                }))
+
                 this.lookingForUpdates = false
-            })
-            .catch((err) => {
+            } catch (err) {
                 this.$bvToast.toast('Could not look for updates. Please try again.', {
                     title: 'Whoops!',
                     variant: 'warning',
@@ -260,7 +264,7 @@ export default {
                     solid: true
                 })
                 this.lookingForUpdates = false
-            })
+            }
         },
         async handleUpdate (index, item) {
             if (!(item.id in this.needsUpdate)) {
@@ -299,6 +303,8 @@ export default {
             }
 
             this.updating = true
+
+            // TODO: Use array.map()
             let promises = []
             Object.values(this.needsUpdate).forEach((row) => {
                 promises.push(this.handleUpdate(row.index, this.addons[row.index]))
