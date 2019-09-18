@@ -25,7 +25,7 @@
             <hr>
             <!-- Open At Login -->
             <b-form-group
-                label="Should the app launch at startup? (hidden)"
+                label="Should the app launch at startup? (in tray)"
                 label-for="openAtLogin"
             >
                 <b-form-checkbox
