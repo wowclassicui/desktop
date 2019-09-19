@@ -1,7 +1,7 @@
 /* global __static */
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import {
   createProtocol,
@@ -99,4 +99,53 @@ if (isDevelopment) {
       app.quit()
     })
   }
+}
+
+let init = false
+let lookForUpdates = true
+let checkInterval = 3600
+let timer = null
+
+// Events
+ipcMain.on('initLookForUpdates', function (evt, args) {
+  if (init) {
+    return
+  }
+
+  init = true
+  lookForUpdates = args.lookForUpdates
+  checkInterval = args.checkInterval
+
+  // console.log('args', args)
+
+  if (lookForUpdates) {
+    timer = setInterval(askForUpdate, checkInterval * 1000)
+  }
+})
+
+ipcMain.on('checkIntervalUpdate', function (evt, args) {
+  if (checkInterval === args.checkInterval && args.lookForUpdates) {
+    // There is no need to clear and update interval
+    return
+  }
+
+  lookForUpdates = args.lookForUpdates
+  checkInterval = args.checkInterval
+
+  if (timer !== null) {
+    clearInterval(timer)
+  }
+
+  if (lookForUpdates) {
+    timer = setInterval(askForUpdate, checkInterval * 1000)
+  }
+
+  // console.log('timer', timer)
+  // console.log('new args', args)
+})
+
+const askForUpdate = () => {
+  // console.log('asking for update..')
+
+  win.webContents.send('askForUpdate')
 }

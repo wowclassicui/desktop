@@ -64,11 +64,13 @@ const mutations = {
     set (state, { addons, cursor }) {
         state.data = addons
         state.cursor = cursor
+        state.err = null
         state.loading = false
     },
     append (state, { addons, cursor }) {
         state.data = state.data.concat(addons)
         state.cursor = cursor
+        state.err = null
         state.loading = false
     },
     failed (state, { err }) {

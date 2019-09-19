@@ -25,9 +25,11 @@ const actions = {
             let data = res.data.data
             commit('scanned', { data })
 
-            return data
+            // return data
+            return Promise.resolve(data)
         } catch (err) {
             commit('failed', { err })
+            return Promise.reject(err)
         }
     }
 }
@@ -39,6 +41,7 @@ const mutations = {
     scanned (state, { data }) {
         state.data = data
         state.scanned = true
+        state.err = null
         state.loading = false
     },
     add (state, addon) {
@@ -51,6 +54,7 @@ const mutations = {
     reset (state) {
         state.data = []
         state.scanned = false
+        state.err = null
     },
     failed (state, { err }) {
         state.err = err

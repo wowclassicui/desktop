@@ -17,22 +17,22 @@
                             Fetch
                         </b-button>
                         <!-- Update -->
-                        <b-button variant="primary" @click="handleUpdateAll" :disabled="updating || needsUpdateCount === 0">
-                            <font-awesome-icon v-if="!updating" icon="download" fixed-width />
-                            <font-awesome-icon v-else icon="circle-notch" fixed-width spin />
+                        <b-button variant="primary" @click="handleUpdateAll" :disabled="updatingAll || updating || needsUpdateCount === 0">
+                            <font-awesome-icon v-if="updatingAll" icon="circle-notch" fixed-width spin />
+                            <font-awesome-icon v-else icon="download" fixed-width />
                             Update All
                         </b-button>
                     </b-button-group>
                 </b-button-toolbar>
                 <div>
-                    <!-- Looking for updates -->
+                    <!-- What's up? -->
                     <div v-if="lookingForUpdates">
                         <span class="text-secondary">
                             Looking for updates..
                             <font-awesome-icon icon="circle-notch" fixed-width spin />
                         </span>
                     </div>
-                    <div v-else-if="updating">
+                    <div v-else-if="updatingAll">
                         <span class="text-secondary">
                             Updating..
                             <font-awesome-icon icon="circle-notch" fixed-width spin />
@@ -58,7 +58,7 @@
             <!-- Table -->
             <b-table
                 id="table-addons"
-                sticky-header="410px"
+                sticky-header="400px"
                 striped
                 hover
                 head-variant="light"
@@ -99,7 +99,7 @@
                             variant="outline-primary"
                             size="sm"
                             class="mr-1"
-                            @click="handleUpdate(data.index, data.item)"
+                            @click="handleUpdate(data.item)"
                             :disabled="needsUpdate[data.item.id].updating"
                         >
                             <font-awesome-icon v-if="!needsUpdate[data.item.id].updating" icon="download" fixed-width />
@@ -110,7 +110,7 @@
                         <b-button
                             variant="outline-danger"
                             size="sm"
-                            @click="handleRemove(data.index, data.item)"
+                            @click="handleRemove(data.item)"
                             :disabled="removing"
                         >
                             <font-awesome-icon icon="trash-alt" size="sm" fixed-width />
@@ -130,7 +130,6 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import addonsMixin from '../mixins/addons'
-import { initWowPath } from '../utils/path'
 import { update, remove, getHash, getAddonsPath } from '../utils/addons'
 import { toString } from '../utils/string'
 
@@ -140,7 +139,12 @@ export default {
         ...mapGetters({
             scanning: 'installed/loading',
             scanned: 'installed/scanned',
-            addons: 'installed/data'
+            addons: 'installed/data',
+
+            lookingForUpdates: 'updates/loading',
+            needsUpdate: 'updates/data',
+            needsUpdateCount: 'updates/count',
+            updating: 'updates/updating'
         }),
         mustSpecifyFolder () {
             return getAddonsPath() === ''
@@ -182,10 +186,7 @@ export default {
                     label: ''
                 }
             ],
-            needsUpdate: {},
-            needsUpdateCount: 0,
-            lookingForUpdates: false,
-            updating: false,
+            updatingAll: false,
             removing: false
         }
     },
@@ -202,10 +203,10 @@ export default {
 
             let addonsPath = getAddonsPath()
 
-            this.needsUpdate = {}
-            this.needsUpdateCount = 0
+            // Reset "needsUpdate"
+            await this.$store.dispatch('updates/reset')
 
-            // Scanning AddOns directory
+            // Scan addons directory
             await this.$store.dispatch('installed/scan', addonsPath)
         },
         async lookForUpdates (addons) {
@@ -213,49 +214,8 @@ export default {
                 return
             }
 
-            const _vm = this
-
-            // Looking for updates
-            this.lookingForUpdates = true
-            // Reset needsUpdate array
-            this.needsUpdate = {}
-            this.needsUpdateCount = 0
-
             try {
-                const res = await Promise.all(addons.map(async (addon, index) => {
-                    if (addon.mainFile === null) {
-                        // No main file here, skipping for now
-                        // console.log('no main file for', addon.name)
-                        return
-                    }
-
-                    // Let's define what we're looking for
-                    let folders = []
-                    if (addon.folders && addon.folders.length > 0) {
-                        folders = addon.folders.map(a => a.name)
-                    } else {
-                        folders.push(addon.name)
-                    }
-
-                    const { hash } = await getHash(folders)
-
-                    const row = {
-                        id: addon.id,
-                        hash
-                    }
-
-                    if (row.hash !== addon.mainFile.hash) {
-                        _vm.needsUpdate[addon.id] = {
-                            index,
-                            updating: false
-                        }
-                        _vm.needsUpdateCount++
-                    }
-
-                    return row
-                }))
-
-                this.lookingForUpdates = false
+                const needsUpdate = await this.$store.dispatch('updates/look', addons)
             } catch (err) {
                 this.$bvToast.toast('Could not look for updates. Please try again.', {
                     title: 'Whoops!',
@@ -263,29 +223,20 @@ export default {
                     toaster: 'b-toaster-bottom-left',
                     solid: true
                 })
-                this.lookingForUpdates = false
             }
         },
-        async handleUpdate (index, item) {
+        async handleUpdate (item) {
             if (!(item.id in this.needsUpdate)) {
                 return Promise.resolve()
             }
-            let row = this.needsUpdate[item.id]
-            if (row.updating) {
+
+            // What if we are already updating this specific addon?
+            if (this.needsUpdate[item.id].updating) {
                 return Promise.resolve()
             }
 
-            // console.log('updating..', item.name)
-
-            row.updating = true
-            let needsUpdate = {}
-            needsUpdate[item.id] = row
-            this.needsUpdate = Object.assign({}, this.needsUpdate, needsUpdate)
-
             try {
-                let result = await update(item)
-                this.$delete(this.needsUpdate, item.id)
-                this.needsUpdateCount--
+                await this.$store.dispatch('updates/update', item)
             } catch (err) {
                 this.$bvToast.toast('Could not update ' + item.name + '. Please try again.', {
                     title: 'Whoops!',
@@ -302,29 +253,39 @@ export default {
                 return
             }
 
-            this.updating = true
+            this.updatingAll = true
 
-            // TODO: Use array.map()
             let promises = []
-            Object.values(this.needsUpdate).forEach((row) => {
-                promises.push(this.handleUpdate(row.index, this.addons[row.index]))
-            })
+            for (const id in this.needsUpdate) {
+                const addon = this.addons.find((value) => {
+                    // Warning: "id" is String, not Integer
+                    return value.id == id
+                })
+
+                // Should never happen. Doing this for safety.
+                if (addon === undefined) {
+                    return
+                }
+
+                promises.push(this.handleUpdate(addon))
+            }
 
             Promise.all(promises)
                 .then(() => {
-                    this.updating = false
+                    this.updatingAll = false
                 })
                 .catch((err) => {
+                    // Will never happen because we're currently never rejecting from "handleUpdate"
                     this.$bvToast.toast('We have had some issues updating your AddOns. Please try again.', {
                         title: 'Whoops!',
                         variant: 'warning',
                         toaster: 'b-toaster-bottom-left',
                         solid: true
                     })
-                    this.updating = false
+                    this.updatingAll = false
                 })
         },
-        async handleRemove (index, item) {
+        async handleRemove (item) {
             const confirm = await this.$bvModal.msgBoxConfirm('Please confirm that you want to delete ' + item.name + '.', {
                 title: 'Please Confirm',
                 size: 'sm',
@@ -385,14 +346,14 @@ export default {
         }
     },
     mounted () {
-        initWowPath()
+        // initWowPath()
 
         if (! this.scanned) {
             // Automatically start 1st addons scan
             this.handleFetch()
         } else {
             // Only look for updates once scan is done
-            this.lookForUpdates(this.addons)
+            // this.lookForUpdates(this.addons)
         }
     }
 }

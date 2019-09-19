@@ -8,9 +8,14 @@ import { fas } from '@fortawesome/free-solid-svg-icons'
 import { far } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
+const { ipcRenderer } = require('electron')
+const Store = require('electron-store')
+const electronStore = new Store()
+
 import store from './store'
 import router from './router'
 import i18n from './i18n'
+import { initWowPath } from '@/utils/path'
 
 // Axios
 axios.defaults.baseURL = process.env.VUE_APP_API_BASE_URL
@@ -29,6 +34,14 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 Vue.config.productionTip = false
 
+// WoW Folder
+initWowPath()
+
+// Locale
+if (electronStore.has('locale')) {
+    i18n.locale = electronStore.get('locale')
+}
+
 const app = new Vue({
     router,
     store,
@@ -43,3 +56,13 @@ if (module.hot) {
         app.$i18n.setLocaleMessage('fr', require('../i18n/fr').default)
     })
 }
+
+// Events
+ipcRenderer.send('initLookForUpdates', {
+    lookForUpdates: electronStore.get('lookForUpdates', true),
+    checkInterval: electronStore.get('checkInterval', 1)
+})
+
+ipcRenderer.on('askForUpdate', (/* evt, args */) => {
+    console.log('should start update!!!')
+})

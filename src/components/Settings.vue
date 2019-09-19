@@ -25,7 +25,7 @@
             <hr>
             <!-- Open At Login -->
             <b-form-group
-                label="Should the app launch at startup? (in tray)"
+                label="Should the app run at startup? (in tray)"
                 label-for="openAtLogin"
             >
                 <b-form-checkbox
@@ -54,15 +54,15 @@
                     </b-form-group>
                 </b-col>
                 <b-col>
-                    <!-- Interval -->
+                    <!-- Check Interval -->
                     <b-form-group
                         label="The interval for checking addon updates"
-                        label-for="interval"
+                        label-for="checkInterval"
                     >
                         <b-form-select
-                            id="interval"
-                            v-model="interval"
-                            :options="intervalOptions"
+                            id="checkInterval"
+                            v-model="checkInterval"
+                            :options="checkIntervalOptions"
                         ></b-form-select>
                     </b-form-group>
                 </b-col>
@@ -104,7 +104,7 @@
 <script>
 const Store = require('electron-store')
 const store = new Store()
-const remote = require('electron').remote
+const { remote, ipcRenderer } = require('electron')
 const { app, dialog } = remote
 const fs = remote.require('fs')
 const path = remote.require('path')
@@ -116,12 +116,12 @@ export default {
             wowFolderIsValid: true,
             openAtLogin: false,
             lookForUpdates: true,
-            interval: 3,
-            intervalOptions: [
-                { value: 1, text: 'every hour' },
-                { value: 2, text: 'every 12 hours' },
-                { value: 3, text: 'every day' },
-                { value: 4, text: 'every week' }
+            checkInterval: 3600,
+            checkIntervalOptions: [
+                { value: 15, text: 'every  15 seconds' },
+                { value: 3600, text: 'every hour' },
+                { value: 43200, text: 'every 12 hours' },
+                { value: 86400, text: 'every day' }
             ],
             // channel: 'release',
             // channelOptions: [
@@ -144,9 +144,19 @@ export default {
         },
         lookForUpdates (to, from) {
             store.set('lookForUpdates', to)
+
+            ipcRenderer.send('checkIntervalUpdate', {
+                lookForUpdates: to,
+                checkInterval: this.checkInterval
+            })
         },
-        interval (to, from) {
+        checkInterval (to, from) {
             store.set('checkInterval', to)
+
+            ipcRenderer.send('checkIntervalUpdate', {
+                lookForUpdates: this.lookForUpdates,
+                checkInterval: to
+            })
         },
         // channel (to, from) {
         //     store.set('channel', to)
@@ -199,13 +209,10 @@ export default {
     mounted () {
         // TODO: Init those values at first launch?
         this.wowFolder = store.get('installationFolder', null)
-
         this.lookForUpdates = store.get('lookForUpdates', true)
-        this.interval = store.get('checkInterval', 3)
+        this.checkInterval = store.get('checkInterval', 3600)
         // this.channel = store.get('channel', 'release')
-        if (store.has('locale')) {
-            this.$i18n.locale = store.get('locale')
-        }
+
         this.initLoginItemSettings()
 
         this.checkWowFolder().then((isValid) => {
