@@ -11,6 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 const { ipcRenderer } = require('electron')
 const Store = require('electron-store')
 const electronStore = new Store()
+import moment from 'moment'
 // const notifier = require('node-notifier')
 
 import store from './store'
@@ -40,9 +41,9 @@ Vue.config.productionTip = false
 initWowPath()
 
 // Locale
-if (electronStore.has('locale')) {
-    i18n.locale = electronStore.get('locale')
-}
+const locale = electronStore.get('locale', 'en')
+i18n.locale = locale
+moment.locale(locale)
 
 const app = new Vue({
     router,

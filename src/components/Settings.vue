@@ -50,7 +50,6 @@
                             v-model="lookForUpdates"
                             name="lookForUpdates"
                         >
-                        <!-- Look for updates -->
                         {{ $t('app.settings.lookforupdates') }}
                         </b-form-checkbox>
                     </b-form-group>
@@ -71,7 +70,6 @@
             </b-row>
             <b-row>
                 <b-col>
-                    <!-- Last check: <em>{{ lastCheckFormatted }}</em> -->
                     {{ $t('app.settings.lastcheck', { lastCheckFormatted }) }}
                 </b-col>
             </b-row>
@@ -182,6 +180,7 @@ export default {
         // },
         '$i18n.locale' (to, from) {
             store.set('locale', to)
+            moment.locale(to)
         }
     },
     methods: {

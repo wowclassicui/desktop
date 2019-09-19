@@ -26,6 +26,7 @@
     "app.loading": "Chargement...",
     "app.menu.about": "À propos",
     "app.menu.browse": "Parcourir",
+    "app.menu.feedback": "Questions & Bugs",
     "app.menu.logout": "Se déconnecter",
     "app.menu.myaddons": "Mes AddOns",
     "app.menu.quit": "Quitter",

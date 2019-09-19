@@ -26,6 +26,7 @@
     "app.loading": "Loading...",
     "app.menu.about": "About",
     "app.menu.browse": "Browse",
+    "app.menu.feedback": "Feedback",
     "app.menu.logout": "Logout",
     "app.menu.myaddons": "My AddOns",
     "app.menu.quit": "Quit",

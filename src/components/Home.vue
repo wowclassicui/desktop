@@ -23,6 +23,7 @@
                     </template>
                     <b-dropdown-item :to="{ name: 'settings'}">{{ $t('app.menu.settings') }}</b-dropdown-item>
                     <b-dropdown-item @click="openWebsite">{{ $t('app.menu.about') }}</b-dropdown-item>
+                    <b-dropdown-item @click="openFeedback">{{ $t('app.menu.feedback') }}</b-dropdown-item>
                     <b-dropdown-item @click="logout">{{ $t('app.menu.logout') }}</b-dropdown-item>
                     <b-dropdown-divider></b-dropdown-divider>
                     <b-dropdown-item @click="reload">{{ $t('app.menu.reload') }}</b-dropdown-item>
@@ -60,6 +61,9 @@ export default {
         },
         openWebsite () {
             shell.openExternal('https://classic-warcraft.com/about')
+        },
+        openFeedback () {
+            shell.openExternal('https://github.com/classic-warcraft/feedback')
         }
     },
     created () {
