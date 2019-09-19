@@ -44,7 +44,8 @@
         </b-row>
         <!-- Table -->
         <b-table
-            sticky-header="400px"
+            primary-key="id"
+            sticky-header="390px"
             striped
             hover
             head-variant="light"
@@ -55,6 +56,7 @@
             :busy="busy"
             :sort-by.sync="sortBy"
             :sort-desc.sync="sortDesc"
+            @row-clicked="handleRowClicked"
         >
             <!-- Loading -->
             <template v-slot:table-busy>
@@ -107,6 +109,7 @@ import addonsMixin from '../mixins/addons'
 import { install } from '../utils/addons'
 import categoriesApi from '../api/categories'
 import { debounce } from 'lodash'
+const { shell } = require('electron')
 
 export default {
     mixins: [addonsMixin],
@@ -164,7 +167,7 @@ export default {
         }
     },
     watch: {
-        filter: debounce (function (e) {
+        filter: debounce (function () {
             const _vm = this
             this.searching = true
             this.fetch(0, null, () => {
@@ -184,7 +187,7 @@ export default {
                 _vm.loadingMore = false
             })
         },
-        handleCategoryChange (value) {
+        handleCategoryChange () {
             const _vm = this
             this.busy = true
             this.fetch(0, null, () => {
@@ -225,6 +228,12 @@ export default {
 
             this.installingId = null
             this.installing = false
+        },
+        handleRowClicked (item) {
+            if (!item.links.web) {
+                return
+            }
+            shell.openExternal(item.links.web)
         },
         fetch (cursor, previous, done) {
             this.$store.dispatch('addons/fetch', {

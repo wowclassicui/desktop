@@ -67,6 +67,11 @@
                     </b-form-group>
                 </b-col>
             </b-row>
+            <b-row>
+                <b-col>
+                    Last check: <em>{{ lastCheckFormatted }}</em>
+                </b-col>
+            </b-row>
             <!-- <b-row>
                 <b-col cols="6">
                     <b-form-group
@@ -102,6 +107,7 @@
 </template>
 
 <script>
+import moment from 'moment'
 const Store = require('electron-store')
 const store = new Store()
 const { remote, ipcRenderer } = require('electron')
@@ -110,6 +116,15 @@ const fs = remote.require('fs')
 const path = remote.require('path')
 
 export default {
+    computed: {
+        lastCheckFormatted () {
+            if (this.lastCheck === null) {
+                return 'never'
+            }
+
+            return moment(this.lastCheck).fromNow()
+        }
+    },
     data () {
         return {
             wowFolder: '',
@@ -118,11 +133,12 @@ export default {
             lookForUpdates: true,
             checkInterval: 3600,
             checkIntervalOptions: [
-                { value: 15, text: 'every  15 seconds' },
+                { value: 60, text: 'every  minute' },
                 { value: 3600, text: 'every hour' },
                 { value: 43200, text: 'every 12 hours' },
                 { value: 86400, text: 'every day' }
             ],
+            lastCheck: null,
             // channel: 'release',
             // channelOptions: [
             //     { value: 'release', text: 'Release (recommended)' },
@@ -211,6 +227,7 @@ export default {
         this.wowFolder = store.get('installationFolder', null)
         this.lookForUpdates = store.get('lookForUpdates', true)
         this.checkInterval = store.get('checkInterval', 3600)
+        this.lastCheck = store.get('lastCheck', null)
         // this.channel = store.get('channel', 'release')
 
         this.initLoginItemSettings()

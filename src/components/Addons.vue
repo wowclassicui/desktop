@@ -58,6 +58,7 @@
             <!-- Table -->
             <b-table
                 id="table-addons"
+                primary-key="id"
                 sticky-header="400px"
                 striped
                 hover
@@ -73,6 +74,7 @@
                 :filter="filter"
                 :filter-included-fields="filterIncludedFields"
                 filter-debounce="400"
+                @row-clicked="handleRowClicked"
             >
                 <!-- Loading -->
                 <template v-slot:table-busy>
@@ -119,8 +121,8 @@
                 </template>
             </b-table>
             <!-- Footer -->
-            <div v-if="!scanning" class="text-center text-secondary">
-                {{ addons.length }} AddOn(s)
+            <div v-if="!scanning && addons.length > 0" class="text-center text-secondary">
+                {{ addons.length }} AddOn(s) &middot; Hint: click a row to see details.
             </div>
         </div>
     </b-container>
@@ -130,8 +132,9 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import addonsMixin from '../mixins/addons'
-import { update, remove, getHash, getAddonsPath } from '../utils/addons'
+import { remove, getAddonsPath } from '../utils/addons'
 import { toString } from '../utils/string'
+const { shell } = require('electron')
 
 export default {
     mixins: [addonsMixin],
@@ -215,7 +218,8 @@ export default {
             }
 
             try {
-                const needsUpdate = await this.$store.dispatch('updates/look', addons)
+                // const needsUpdate = await this.$store.dispatch('updates/look', addons)
+                await this.$store.dispatch('updates/look', addons)
             } catch (err) {
                 this.$bvToast.toast('Could not look for updates. Please try again.', {
                     title: 'Whoops!',
@@ -237,7 +241,7 @@ export default {
 
             try {
                 await this.$store.dispatch('updates/update', item)
-            } catch (err) {
+            } catch {
                 this.$bvToast.toast('Could not update ' + item.name + '. Please try again.', {
                     title: 'Whoops!',
                     variant: 'warning',
@@ -274,7 +278,7 @@ export default {
                 .then(() => {
                     this.updatingAll = false
                 })
-                .catch((err) => {
+                .catch(() => {
                     // Will never happen because we're currently never rejecting from "handleUpdate"
                     this.$bvToast.toast('We have had some issues updating your AddOns. Please try again.', {
                         title: 'Whoops!',
@@ -311,7 +315,7 @@ export default {
                 if (deletedPaths.length > 0) {
                     this.$store.commit('installed/remove', item)
                 }
-            } catch (err) {
+            } catch {
                 this.$bvToast.toast('Could not delete ' + item.name + '. Please try again.', {
                     title: 'Whoops!',
                     variant: 'warning',
@@ -321,6 +325,12 @@ export default {
             }
 
             this.removing = false
+        },
+        handleRowClicked (item) {
+            if (!item.links.web) {
+                return
+            }
+            shell.openExternal(item.links.web)
         },
         toDate (value) {
             return moment(value).fromNow()
@@ -346,14 +356,9 @@ export default {
         }
     },
     mounted () {
-        // initWowPath()
-
-        if (! this.scanned) {
+        if (!this.scanned && !this.scanning) {
             // Automatically start 1st addons scan
             this.handleFetch()
-        } else {
-            // Only look for updates once scan is done
-            // this.lookForUpdates(this.addons)
         }
     }
 }

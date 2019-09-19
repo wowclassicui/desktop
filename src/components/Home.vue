@@ -22,10 +22,11 @@
                         <font-awesome-icon icon="bars" fixed-width />
                     </template>
                     <b-dropdown-item :to="{ name: 'settings'}">Settings</b-dropdown-item>
-                    <b-dropdown-item @click="reload">Reload App</b-dropdown-item>
                     <b-dropdown-item @click="openWebsite">About</b-dropdown-item>
-                    <b-dropdown-divider></b-dropdown-divider>
                     <b-dropdown-item @click="logout">Logout</b-dropdown-item>
+                    <b-dropdown-divider></b-dropdown-divider>
+                    <b-dropdown-item @click="reload">Reload App</b-dropdown-item>
+                    <b-dropdown-item @click="quit">Quit</b-dropdown-item>
                 </b-nav-item-dropdown>
             </b-navbar-nav>
         </b-navbar>
@@ -34,9 +35,8 @@
 </template>
 
 <script>
-const remote = require('electron').remote
+const { shell, remote, app } = require('electron')
 const { getCurrentWindow } = remote
-const shell = require('electron').shell
 
 export default {
     data () {
@@ -50,6 +50,10 @@ export default {
                 .then(() => {
                     this.$router.push('/login')
                 })
+        },
+        quit () {
+            getCurrentWindow().destroy()
+            app.quit()
         },
         reload () {
             getCurrentWindow().reload()

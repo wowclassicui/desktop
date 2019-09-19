@@ -1,7 +1,7 @@
 /* global __static */
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow, Tray, Menu, ipcMain } from 'electron'
 import path from 'path'
 import {
   createProtocol,
@@ -43,6 +43,11 @@ function createWindow () {
     win.loadURL('app://./index.html')
   }
 
+  win.on('close', (event) => {
+    event.preventDefault()
+    win.hide()
+  })
+
   win.on('closed', () => {
     win = null
   })
@@ -65,6 +70,8 @@ app.on('activate', () => {
   }
 })
 
+let tray = null
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -81,9 +88,31 @@ app.on('ready', async () => {
     // } catch (e) {
     //   console.error('Vue Devtools failed to install:', e.toString())
     // }
-
   }
+
   createWindow()
+
+  // Tray
+  tray = new Tray(path.join(__static, 'icon.png'))
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Show App',
+      click: () => {
+        win.show()
+      }
+    },
+    {
+      label: 'Quit',
+      click: () => {
+        win.destroy()
+        app.quit()
+      }
+    }
+  ])
+  tray.setContextMenu(contextMenu)
+  tray.on('click', () => {
+    win.show()
+  })
 })
 
 // Exit cleanly on request from parent process in development mode.
@@ -101,12 +130,12 @@ if (isDevelopment) {
   }
 }
 
+// Events & addons update
 let init = false
 let lookForUpdates = true
 let checkInterval = 3600
 let timer = null
 
-// Events
 ipcMain.on('initLookForUpdates', function (evt, args) {
   if (init) {
     return
@@ -115,8 +144,6 @@ ipcMain.on('initLookForUpdates', function (evt, args) {
   init = true
   lookForUpdates = args.lookForUpdates
   checkInterval = args.checkInterval
-
-  // console.log('args', args)
 
   if (lookForUpdates) {
     timer = setInterval(askForUpdate, checkInterval * 1000)
@@ -139,13 +166,22 @@ ipcMain.on('checkIntervalUpdate', function (evt, args) {
   if (lookForUpdates) {
     timer = setInterval(askForUpdate, checkInterval * 1000)
   }
-
-  // console.log('timer', timer)
-  // console.log('new args', args)
 })
 
 const askForUpdate = () => {
-  // console.log('asking for update..')
+  if (win === null) {
+    return
+  }
+
+  console.log('asking for update?')
+
+  // Avoid to send "askForUpdate" when app isn't minimized (to tray)
+  if (win.isVisible()) {
+    console.log('app is visible, aborting')
+    return
+  }
+
+  console.log('we sure do!')
 
   win.webContents.send('askForUpdate')
 }

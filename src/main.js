@@ -11,11 +11,13 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 const { ipcRenderer } = require('electron')
 const Store = require('electron-store')
 const electronStore = new Store()
+// const notifier = require('node-notifier')
 
 import store from './store'
 import router from './router'
 import i18n from './i18n'
 import { initWowPath } from '@/utils/path'
+import { getAddonsPath } from '@/utils/addons'
 
 // Axios
 axios.defaults.baseURL = process.env.VUE_APP_API_BASE_URL
@@ -63,6 +65,50 @@ ipcRenderer.send('initLookForUpdates', {
     checkInterval: electronStore.get('checkInterval', 1)
 })
 
-ipcRenderer.on('askForUpdate', (/* evt, args */) => {
-    console.log('should start update!!!')
+let addonsPath
+let addons
+// let needsUpdate
+ipcRenderer.on('askForUpdate', async (/* evt, args */) => {
+    addonsPath = getAddonsPath()
+    if (addonsPath === '') {
+        return
+    }
+
+    // One at a time!
+    if (
+        app.$store.getters['installed/loading'] ||
+        app.$store.getters['updates/loading'] ||
+        app.$store.getters['updates/updating']
+    ) {
+        return
+    }
+
+    electronStore.set('lastCheck', new Date())
+
+    await app.$store.dispatch('updates/reset')
+    addons = await app.$store.dispatch('installed/scan', addonsPath)
+    await app.$store.dispatch('updates/look', addons)
+
+    if (app.$store.getters['updates/count'] > 0) {
+        for (const id in app.$store.getters['updates/data']) {
+            const addon = addons.find((value) => {
+                // Warning: "id" is String, not Integer
+                return value.id == id
+            })
+
+            // Should never happen. Doing this for safety.
+            if (addon === undefined) {
+                return
+            }
+
+            // Update addon (await should not be required here)
+            app.$store.dispatch('updates/update', addon)
+            .then(() => {
+                // notifier.notify({
+                //     title: 'Updated: ' + addon.name,
+                //     body: "We've automatically updated " + addon.name + " while you were away."
+                // })
+            })
+        }
+    }
 })
