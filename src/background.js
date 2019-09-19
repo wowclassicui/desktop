@@ -12,6 +12,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
+let tray
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{
@@ -53,6 +54,38 @@ function createWindow () {
   })
 }
 
+function createTray () {
+  tray = new Tray(path.join(__static, 'icon.png'))
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Show App',
+      click: () => {
+        win.show()
+      }
+    },
+    {
+      label: 'Quit',
+      click: () => {
+        win.destroy()
+        app.quit()
+      }
+    }
+  ])
+  tray.setContextMenu(contextMenu)
+  tray.setToolTip('Classic Warcraft App')
+  tray.on('click', () => {
+    toggleWindow()
+  })
+}
+
+const toggleWindow = function () {
+  if (win.isVisible()) {
+    win.hide()
+  } else {
+    win.show()
+  }
+}
+
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
@@ -69,8 +102,6 @@ app.on('activate', () => {
     createWindow()
   }
 })
-
-let tray = null
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -90,29 +121,8 @@ app.on('ready', async () => {
     // }
   }
 
+  createTray()
   createWindow()
-
-  // Tray
-  tray = new Tray(path.join(__static, 'icon.png'))
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'Show App',
-      click: () => {
-        win.show()
-      }
-    },
-    {
-      label: 'Quit',
-      click: () => {
-        win.destroy()
-        app.quit()
-      }
-    }
-  ])
-  tray.setContextMenu(contextMenu)
-  tray.on('click', () => {
-    win.show()
-  })
 })
 
 // Exit cleanly on request from parent process in development mode.
@@ -173,15 +183,10 @@ const askForUpdate = () => {
     return
   }
 
-  console.log('asking for update?')
-
   // Avoid to send "askForUpdate" when app isn't minimized (to tray)
   if (win.isVisible()) {
-    console.log('app is visible, aborting')
     return
   }
-
-  console.log('we sure do!')
 
   win.webContents.send('askForUpdate')
 }
