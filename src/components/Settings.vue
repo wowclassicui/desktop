@@ -1,9 +1,13 @@
 <template>
     <div>
         <b-container class="my-2">
+            <!-- App -->
+            <div v-if="appVersion !== null" class="text-center text-secondary">
+                <p>Classic Warcraft App <strong>v{{ appVersion }}</strong></p>
+            </div>
             <!-- WoW Folder -->
             <b-form-group
-                label="Specify your WoW installation folder"
+                :label="$t('app.settings.wowfolderlabel')"
                 label-for="wowFolder"
             >
                 <b-input-group>
@@ -25,7 +29,7 @@
             <hr>
             <!-- Open At Login -->
             <b-form-group
-                label="Should the app run at startup? (in tray)"
+                :label="$t('app.settings.runatstartuplabel')"
                 label-for="openAtLogin"
             >
                 <b-form-checkbox
@@ -42,7 +46,7 @@
                 <b-col>
                     <!-- Look for updates -->
                     <b-form-group
-                        label="Look for addon updates in the background"
+                        :label="$t('app.settings.lookforupdateslabel')"
                         label-for="lookForUpdates"
                     >
                         <b-form-checkbox
@@ -57,7 +61,7 @@
                 <b-col>
                     <!-- Check Interval -->
                     <b-form-group
-                        label="The interval for checking addon updates"
+                        :label="$t('app.settings.checkintervallabel')"
                         label-for="checkInterval"
                     >
                         <b-form-select
@@ -70,7 +74,7 @@
             </b-row>
             <b-row>
                 <b-col>
-                    {{ $t('app.settings.lastcheck', { lastCheckFormatted }) }}
+                    <em>&mdash; {{ $t('app.settings.lastcheck', { lastCheckFormatted }) }}</em>
                 </b-col>
             </b-row>
             <!-- <b-row>
@@ -128,6 +132,7 @@ export default {
     },
     data () {
         return {
+            appVersion: null,
             wowFolder: '',
             wowFolderIsValid: true,
             openAtLogin: false,
@@ -153,13 +158,13 @@ export default {
         }
     },
     watch: {
-        openAtLogin (to, from) {
+        openAtLogin (to) {
             app.setLoginItemSettings({
                 openAtLogin: to,
                 openAsHidden: true
             })
         },
-        lookForUpdates (to, from) {
+        lookForUpdates (to) {
             store.set('lookForUpdates', to)
 
             ipcRenderer.send('checkIntervalUpdate', {
@@ -167,7 +172,7 @@ export default {
                 checkInterval: this.checkInterval
             })
         },
-        checkInterval (to, from) {
+        checkInterval (to) {
             store.set('checkInterval', to)
 
             ipcRenderer.send('checkIntervalUpdate', {
@@ -175,10 +180,10 @@ export default {
                 checkInterval: to
             })
         },
-        // channel (to, from) {
+        // channel (to) {
         //     store.set('channel', to)
         // },
-        '$i18n.locale' (to, from) {
+        '$i18n.locale' (to) {
             store.set('locale', to)
             moment.locale(to)
         }
@@ -217,7 +222,7 @@ export default {
 
             const executablePath = path.resolve(this.wowFolder, '_classic_', 'Wow.exe')
 
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve/* , reject */) => {
                 fs.access(executablePath, (err) => {
                     resolve(err ? false : true)
                 })
@@ -225,6 +230,8 @@ export default {
         }
     },
     mounted () {
+        this.appVersion = app.getVersion()
+
         // TODO: Init those values at first launch?
         this.wowFolder = store.get('installationFolder', null)
         this.lookForUpdates = store.get('lookForUpdates', true)
