@@ -63,7 +63,7 @@ export default {
             shell.openExternal('https://classic-warcraft.com/about')
         },
         openFeedback () {
-            shell.openExternal('https://github.com/classic-warcraft/feedback')
+            shell.openExternal('https://github.com/classic-warcraft/feedback/labels/desktop')
         }
     },
     created () {
