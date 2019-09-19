@@ -10,7 +10,7 @@
                     <b-input-group-text slot="prepend">
                         <font-awesome-icon v-if="wowFolderIsValid" icon="check-circle" fixed-width class="text-success" />
                         <font-awesome-icon v-else icon="times-circle" fixed-width class="text-danger" />
-                        WoW Folder
+                        {{ $t('app.settings.wowfolder') }}
                     </b-input-group-text>
                     <b-form-input
                         id="wowFolder"
@@ -18,7 +18,7 @@
                         placeholder="D:\World of Warcraft"
                     ></b-form-input>
                     <b-input-group-append>
-                        <b-button text="Browse" variant="secondary" @click="handleBrowse">Browse</b-button>
+                        <b-button text="Browse" variant="secondary" @click="handleBrowse">{{ $t('app.settings.browse') }}</b-button>
                     </b-input-group-append>
                 </b-input-group>
             </b-form-group>
@@ -33,7 +33,8 @@
                     v-model="openAtLogin"
                     name="openAtLogin"
                 >
-                Run at startup
+                <!-- Run at startup -->
+                {{ $t('app.settings.runatstartup') }}
                 </b-form-checkbox>
             </b-form-group>
             <hr>
@@ -49,7 +50,8 @@
                             v-model="lookForUpdates"
                             name="lookForUpdates"
                         >
-                        Look for updates
+                        <!-- Look for updates -->
+                        {{ $t('app.settings.lookforupdates') }}
                         </b-form-checkbox>
                     </b-form-group>
                 </b-col>
@@ -69,7 +71,8 @@
             </b-row>
             <b-row>
                 <b-col>
-                    Last check: <em>{{ lastCheckFormatted }}</em>
+                    <!-- Last check: <em>{{ lastCheckFormatted }}</em> -->
+                    {{ $t('app.settings.lastcheck', { lastCheckFormatted }) }}
                 </b-col>
             </b-row>
             <!-- <b-row>
@@ -133,10 +136,10 @@ export default {
             lookForUpdates: true,
             checkInterval: 3600,
             checkIntervalOptions: [
-                { value: 60, text: 'every  minute' },
-                { value: 3600, text: 'every hour' },
-                { value: 43200, text: 'every 12 hours' },
-                { value: 86400, text: 'every day' }
+                { value: 60, text: this.$t('app.settings.checkinterval.everyminute') },
+                { value: 3600, text: this.$t('app.settings.checkinterval.everyhour') },
+                { value: 43200, text: this.$t('app.settings.checkinterval.everytwelvehours') },
+                { value: 86400, text: this.$t('app.settings.checkinterval.everyday') }
             ],
             lastCheck: null,
             // channel: 'release',

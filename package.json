@@ -27,6 +27,7 @@
     "crc": "^3.8.0",
     "del": "^5.1.0",
     "electron-store": "^4.0.0",
+    "eslint-plugin-vue-i18n": "^0.2.3",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "node-glob": "^1.2.0",
@@ -35,7 +36,9 @@
     "unzipper": "^0.10.5",
     "vue": "^2.6.10",
     "vue-axios": "^2.1.4",
+    "vue-cli-plugin-i18n": "^0.6.0",
     "vue-i18n": "^8.14.1",
+    "vue-i18n-loader": "^1.0.0",
     "vue-router": "^3.1.2",
     "vuex": "^3.1.1"
   },

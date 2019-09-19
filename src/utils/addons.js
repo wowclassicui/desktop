@@ -193,49 +193,6 @@ const walkdir = (dir) => {
             reject(err)
         }
     })
-
-    // return new Promise((resolve, reject) => {
-    //     fs.readdir(dir, (err, files) => {
-    //         if (err) {
-    //             return reject(err)
-    //         }
-
-    //         Promise.all(files.map((file) => {
-
-    //             // STAT SYNC
-    //             // return new Promise((resolve, reject) => {
-    //             //     const filepath = path.join(dir, file)
-
-    //             //     const stats = fs.statSync(filepath)
-
-    //             //     if (stats.isDirectory()) {
-    //             //         walkdir(filepath).then(resolve)
-    //             //     } else if (stats.isFile()) {
-    //             //         resolve(filepath)
-    //             //     }
-    //             // })
-
-    //             // STAT ASYNC
-    //             // return new Promise((resolve, reject) => {
-    //             //     const filepath = path.join(dir, file)
-    //             //     fs.stat(filepath, (err, stats) => {
-    //             //         if (err) {
-    //             //             return reject(err)
-    //             //         }
-
-    //             //         if (stats.isDirectory()) {
-    //             //             walkdir(filepath).then(resolve)
-    //             //         } else if (stats.isFile()) {
-    //             //             resolve(filepath)
-    //             //         }
-    //             //     })
-    //             // })
-    //         }))
-    //         .then((foldersContents) => {
-    //             resolve(foldersContents.reduce((all, folderContents) => all.concat(folderContents), []))
-    //         })
-    //     })
-    // })
 }
 
 export {

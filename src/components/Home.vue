@@ -21,12 +21,12 @@
                     <template v-slot:button-content>
                         <font-awesome-icon icon="bars" fixed-width />
                     </template>
-                    <b-dropdown-item :to="{ name: 'settings'}">Settings</b-dropdown-item>
-                    <b-dropdown-item @click="openWebsite">About</b-dropdown-item>
-                    <b-dropdown-item @click="logout">Logout</b-dropdown-item>
+                    <b-dropdown-item :to="{ name: 'settings'}">{{ $t('app.menu.settings') }}</b-dropdown-item>
+                    <b-dropdown-item @click="openWebsite">{{ $t('app.menu.about') }}</b-dropdown-item>
+                    <b-dropdown-item @click="logout">{{ $t('app.menu.logout') }}</b-dropdown-item>
                     <b-dropdown-divider></b-dropdown-divider>
-                    <b-dropdown-item @click="reload">Reload App</b-dropdown-item>
-                    <b-dropdown-item @click="quit">Quit</b-dropdown-item>
+                    <b-dropdown-item @click="reload">{{ $t('app.menu.reload') }}</b-dropdown-item>
+                    <b-dropdown-item @click="quit">{{ $t('app.menu.quit') }}</b-dropdown-item>
                 </b-nav-item-dropdown>
             </b-navbar-nav>
         </b-navbar>

@@ -2,8 +2,8 @@
     <b-container fluid>
         <div v-if="mustSpecifyFolder">
             <b-alert class="my-2" show variant="warning">
-                Please specify your WoW installation folder.
-                Go to <a href="#" @click.prevent="$router.push('settings')">Settings</a>.
+                {{ $t('app.addons.specifywowfolder') }}
+                {{ $t('app.addons.goto') }} <a href="#" @click.prevent="$router.push('settings')">{{ $t('app.addons.settings') }}</a>.
             </b-alert>
         </div>
         <div v-else>
@@ -14,13 +14,13 @@
                         <!-- Fetch -->
                         <b-button @click="handleFetch" :disabled="scanning">
                             <font-awesome-icon icon="sync" fixed-width :spin="scanning" />
-                            Fetch
+                            {{ $t('app.addons.fetch') }}
                         </b-button>
                         <!-- Update -->
                         <b-button variant="primary" @click="handleUpdateAll" :disabled="updatingAll || updating || needsUpdateCount === 0">
                             <font-awesome-icon v-if="updatingAll" icon="circle-notch" fixed-width spin />
                             <font-awesome-icon v-else icon="download" fixed-width />
-                            Update All
+                            {{ $t('app.addons.updateall') }}
                         </b-button>
                     </b-button-group>
                 </b-button-toolbar>
@@ -28,19 +28,19 @@
                     <!-- What's up? -->
                     <div v-if="lookingForUpdates">
                         <span class="text-secondary">
-                            Looking for updates..
+                            {{ $t('app.addons.lookingforupdates') }}
                             <font-awesome-icon icon="circle-notch" fixed-width spin />
                         </span>
                     </div>
                     <div v-else-if="updatingAll">
                         <span class="text-secondary">
-                            Updating..
+                            {{ $t('app.addons.updating') }}
                             <font-awesome-icon icon="circle-notch" fixed-width spin />
                         </span>
                     </div>
                     <div v-else-if="needsUpdateCount > 0">
                         <span class="text-secondary">
-                            {{ needsUpdateCount }} update(s) available
+                            {{ $t('app.addons.updatesavailable', { needsUpdateCount }) }}
                         </span>
                     </div>
                 </div>
@@ -51,7 +51,7 @@
                         type="search"
                         size="sm"
                         id="filterInput"
-                        placeholder="Type to Search"
+                        :placeholder="$t('app.typetosearch')"
                     ></b-form-input>
                 </div>
             </div>
@@ -80,7 +80,7 @@
                 <template v-slot:table-busy>
                     <div class="text-center text-secondary my-4">
                     <b-spinner class="align-middle mr-1"></b-spinner>
-                    <strong>Fetching..</strong>
+                    <strong>{{ $t('app.addons.fetching') }}</strong>
                     </div>
                 </template>
                 <!-- Logo -->
@@ -106,7 +106,7 @@
                         >
                             <font-awesome-icon v-if="!needsUpdate[data.item.id].updating" icon="download" fixed-width />
                             <font-awesome-icon v-else icon="circle-notch" fixed-width spin />
-                            Update
+                            {{ $t('app.addons.update') }}
                         </b-button>
                         <!-- Remove -->
                         <b-button
@@ -122,7 +122,7 @@
             </b-table>
             <!-- Footer -->
             <div v-if="!scanning && addons.length > 0" class="text-center text-secondary">
-                {{ addons.length }} AddOn(s) &middot; Hint: click a row to see details.
+                {{ addons.length }} AddOn(s) &middot; {{ $t('app.addons.hint') }}
             </div>
         </div>
     </b-container>
@@ -166,21 +166,21 @@ export default {
                 },
                 {
                     key: 'name',
-                    label: 'Name',
+                    label: this.$t('app.addons.name'),
                     sortable: true
                 },
                 {
                     key: 'downloads',
-                    label: 'Downloads',
+                    label: this.$t('app.addons.downloads'),
                     sortable: true
                 },
                 {
                     key: 'mainFile.version',
-                    label: 'Latest',
+                    label: this.$t('app.addons.latest'),
                 },
                 {
                     key: 'mainFile.created_at',
-                    label: 'Updated',
+                    label: this.$t('app.addons.updated'),
                     // sortable: true,
                     formatter: 'toDate'
                 },

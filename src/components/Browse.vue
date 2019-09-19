@@ -10,14 +10,14 @@
                         v-model="filter"
                         type="search"
                         size="sm"
-                        placeholder="Type to Search"
+                        :placeholder="$t('app.typetosearch')"
                     ></b-form-input>
                 </b-form-group>
             </b-col>
             <b-col class="d-sm-none d-md-block md-4">
                 <div class="text-center text-secondary">
                     <div v-if="searching">
-                        Searching
+                        {{ $t('app.browse.searching') }}
                         <font-awesome-icon icon="circle-notch" fixed-width spin />
                     </div>
                 </div>
@@ -32,7 +32,7 @@
                         size="sm"
                         @change="handleCategoryChange"
                     >
-                        <option :value="null">Select a Category</option>
+                        <option :value="null">{{ $t('app.browse.categoryselect') }}</option>
                         <option
                             v-for="category in categories"
                             :key="category.id"
@@ -62,7 +62,7 @@
             <template v-slot:table-busy>
                 <div class="text-center text-secondary my-4">
                 <b-spinner class="align-middle mr-1"></b-spinner>
-                <strong>Loading...</strong>
+                <strong>{{ $t('app.loading') }}</strong>
                 </div>
             </template>
             <!-- Logo -->
@@ -87,7 +87,7 @@
                     >
                         <font-awesome-icon v-if="isInstallingAddon(data.item)" icon="circle-notch" fixed-width spin />
                         <font-awesome-icon v-else icon="download" fixed-width />
-                        Install
+                        {{ $t('app.browse.install') }}
                     </b-button>
                 </div>
             </template>
@@ -96,8 +96,8 @@
         <b-button-group>
             <b-button @click="onMore" :disabled="loading || loadingMore || cursor.next === null">
                 <b-spinner v-if="loadingMore" small type="grow" class="mr-1"></b-spinner>
-                <span v-if="cursor.next !== null">More</span>
-                <span v-else>No more</span>
+                <span v-if="cursor.next !== null">{{ $t('app.browse.more') }}</span>
+                <span v-else>{{ $t('app.browse.nomore') }}</span>
             </b-button>
         </b-button-group>
     </b-container>
@@ -133,22 +133,22 @@ export default {
                 },
                 {
                     key: 'name',
-                    label: 'Name',
+                    label: this.$t('app.browse.name'),
                     sortable: true
                 },
                 {
                     key: 'downloads',
-                    label: 'Downloads',
+                    label: this.$t('app.browse.downloads'),
                     sortable: true
                 },
                 {
                     key: 'category.name',
-                    label: 'Category',
+                    label: this.$t('app.browse.category'),
                     sortable: true
                 },
                 {
                     key: 'mainFile.version',
-                    label: 'Latest'
+                    label: this.$t('app.browse.latest')
                 },
                 {
                     key: 'actions',
