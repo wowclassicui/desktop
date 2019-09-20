@@ -56,7 +56,7 @@
             :busy="busy"
             :sort-by.sync="sortBy"
             :sort-desc.sync="sortDesc"
-            @row-clicked="handleRowClicked"
+            @row-contextmenu="handleRowContextMenu"
         >
             <!-- Loading -->
             <template v-slot:table-busy>
@@ -109,7 +109,8 @@ import addonsMixin from '../mixins/addons'
 import { install } from '../utils/addons'
 import categoriesApi from '../api/categories'
 import { debounce } from 'lodash'
-const { shell } = require('electron')
+const { shell, remote } = require('electron')
+const { Menu, MenuItem } = remote
 
 export default {
     mixins: [addonsMixin],
@@ -229,11 +230,23 @@ export default {
             this.installingId = null
             this.installing = false
         },
-        handleRowClicked (item) {
-            if (!item.links.web) {
-                return
-            }
-            shell.openExternal(item.links.web)
+        handleRowContextMenu (item, index, event) {
+            event.preventDefault()
+
+            let _vm = this
+
+            const contextMenu = new Menu()
+            contextMenu.append(new MenuItem({
+                label: _vm.$t('app.contextmenu.webpage'),
+                click () {
+                    if (!item.links.web) {
+                        return
+                    }
+                    shell.openExternal(item.links.web)
+                }
+            }))
+
+            contextMenu.popup({ window: remote.getCurrentWindow() })
         },
         fetch (cursor, previous, done) {
             this.$store.dispatch('addons/fetch', {

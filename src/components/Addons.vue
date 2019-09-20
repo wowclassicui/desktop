@@ -206,9 +206,6 @@ export default {
     watch: {
         addons (to) {
             this.lookForUpdates(to)
-        },
-        exclude (to) {
-            console.log('exclude', to)
         }
     },
     methods: {
@@ -308,12 +305,12 @@ export default {
         },
         async handleRemove (item) {
             const confirm = await this.$bvModal.msgBoxConfirm('Please confirm that you want to delete ' + item.name + '.', {
-                title: 'Please Confirm',
+                title: this.$t('app.confirm.title'),
                 size: 'sm',
                 buttonSize: 'sm',
                 okVariant: 'danger',
-                okTitle: 'YES',
-                cancelTitle: 'NO',
+                okTitle: this.$t('app.confirm.oktitle'),
+                cancelTitle: this.$t('app.confirm.canceltitle'),
                 footerClass: 'p-2',
                 hideHeaderClose: false,
                 centered: true
@@ -360,7 +357,7 @@ export default {
             // Create context menu
             const contextMenu = new Menu()
             contextMenu.append(new MenuItem({
-                label: isExcluded ? 'Remove from Exclude list' : 'Add to Exclude list',
+                label: isExcluded ? _vm.$t('app.exclude.remove') : _vm.$t('app.exclude.add'),
                 click () {
                     if (isExcluded) {
                         _vm.$store.dispatch('exclude/remove', item.id)
@@ -370,7 +367,7 @@ export default {
                 }
             }))
             contextMenu.append(new MenuItem({
-                label: 'View AddOn web page',
+                label: _vm.$t('app.contextmenu.webpage'),
                 click () {
                     if (!item.links.web) {
                         return
