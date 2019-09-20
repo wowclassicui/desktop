@@ -3,10 +3,9 @@
 
 import { app, protocol, BrowserWindow, Tray, Menu, ipcMain } from 'electron'
 import path from 'path'
-import {
-  createProtocol,
-  installVueDevtools
-} from 'vue-cli-plugin-electron-builder/lib'
+import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib'
+const Store = require('electron-store')
+const electronStore = new Store()
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -45,8 +44,10 @@ function createWindow () {
   }
 
   win.on('close', (event) => {
-    event.preventDefault()
-    win.hide()
+    if (electronStore.has('minimizeToTray') && electronStore.get('minimizeToTray')) {
+      event.preventDefault()
+      win.hide()
+    }
   })
 
   win.on('closed', () => {
@@ -109,7 +110,7 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 
-if (!gotTheLock) {
+if (!gotTheLock && !isDevelopment) {
   app.quit()
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
@@ -176,6 +177,11 @@ ipcMain.on('initLookForUpdates', function (evt, args) {
   checkInterval = args.checkInterval
 
   if (lookForUpdates) {
+    // Doing this for safety. Shouldn't be required.
+    if (timer !== null) {
+      clearInterval(timer)
+    }
+
     timer = setInterval(askForUpdate, checkInterval * 1000)
   }
 })

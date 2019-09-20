@@ -50,6 +50,8 @@
     "app.settings.lastcheck": "Last check: {lastCheckFormatted}",
     "app.settings.lookforupdates": "Look for updates",
     "app.settings.lookforupdateslabel": "Look for addon updates in the background",
+    "app.settings.minimizetotray": "Minimize to system tray",
+    "app.settings.minimizetotraylabel": "Minimize to system tray when I close the app",
     "app.settings.runatstartup": "Run at startup",
     "app.settings.runatstartuplabel": "Should the app run at system startup? (in tray)",
     "app.settings.wowfolder": "WoW Folder",

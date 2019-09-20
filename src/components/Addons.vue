@@ -74,7 +74,7 @@
                 :filter="filter"
                 :filter-included-fields="filterIncludedFields"
                 filter-debounce="400"
-                @row-clicked="handleRowClicked"
+                @row-contextmenu="handleRowContextMenu"
             >
                 <!-- Loading -->
                 <template v-slot:table-busy>
@@ -326,11 +326,11 @@ export default {
 
             this.removing = false
         },
-        handleRowClicked (item) {
-            if (!item.links.web) {
-                return
-            }
-            shell.openExternal(item.links.web)
+        handleRowContextMenu (item) {
+            // if (!item.links.web) {
+            //     return
+            // }
+            // shell.openExternal(item.links.web)
         },
         toDate (value) {
             return moment(value).fromNow()

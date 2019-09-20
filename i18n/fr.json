@@ -50,6 +50,8 @@
     "app.settings.lastcheck": "Dernière vérification : {lastCheckFormatted}",
     "app.settings.lookforupdates": "Rechercher des mises à jour",
     "app.settings.lookforupdateslabel": "Rechercher des mises à jour d'addon en arrière-plan",
+    "app.settings.minimizetotray": "Réduire dans la barre d'état système",
+    "app.settings.minimizetotraylabel": "Réduire dans la barre d'état système lorsque je ferme l'application",
     "app.settings.runatstartup": "Exécuter au démarrage",
     "app.settings.runatstartuplabel": "L'application doit-elle se lancer au démarrage du système ? (barre des tâches)",
     "app.settings.wowfolder": "Dossier WoW",

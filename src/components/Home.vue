@@ -1,6 +1,6 @@
 <template>
     <section id="home" class="h-100">
-        <b-navbar type="dark" variant="dark">
+        <b-navbar type="dark" variant="dark" :sticky="true">
             <b-navbar-brand tag="h1" class="mb-0">
                 <img src="@/assets/logo.png" class="d-inline-block align-middle" alt="Classic Warcraft App">
                 Classic Warcraft App
