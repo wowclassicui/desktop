@@ -86,8 +86,6 @@ ipcRenderer.on('askForUpdate', async (/* evt, args */) => {
 
     electronStore.set('lastCheck', new Date())
 
-    console.log('Looking for updates..')
-
     await app.$store.dispatch('updates/reset')
     addons = await app.$store.dispatch('installed/scan', addonsPath)
     await app.$store.dispatch('updates/look', addons)
@@ -101,6 +99,11 @@ ipcRenderer.on('askForUpdate', async (/* evt, args */) => {
 
             // Should never happen. Doing this for safety.
             if (addon === undefined) {
+                return
+            }
+
+            // Check exclude list
+            if (app.$store.getters['exclude/list'].includes(addon.id)) {
                 return
             }
 

@@ -11,10 +11,10 @@
             <div class="d-flex d-flex-row align-items-center d-flex justify-content-between my-2">
                 <b-button-toolbar>
                     <b-button-group>
-                        <!-- Fetch -->
-                        <b-button @click="handleFetch" :disabled="scanning">
+                        <!-- Refresh -->
+                        <b-button @click="handleRefresh" :disabled="scanning">
                             <font-awesome-icon icon="sync" fixed-width :spin="scanning" />
-                            {{ $t('app.addons.fetch') }}
+                            {{ $t('app.addons.refresh') }}
                         </b-button>
                         <!-- Update -->
                         <b-button variant="primary" @click="handleUpdateAll" :disabled="updatingAll || updating || needsUpdateCount === 0">
@@ -95,14 +95,21 @@
                 <!-- Actions -->
                 <template v-slot:cell(actions)="data">
                     <div class="text-right">
+                        <!-- Excluded -->
+                        <b-button
+                            v-if="exclude.includes(data.item.id)"
+                            variant="link"
+                            size="sm"
+                            :disabled="true"
+                        >{{ $t('app.addons.excluded') }}</b-button>
                         <!-- Update -->
                         <b-button
-                            v-if="data.item.id in needsUpdate"
+                            v-if="data.item.id in needsUpdate && !exclude.includes(data.item.id)"
                             variant="outline-primary"
                             size="sm"
                             class="mr-1"
                             @click="handleUpdate(data.item)"
-                            :disabled="needsUpdate[data.item.id].updating"
+                            :disabled="needsUpdate[data.item.id].updating || exclude.includes(data.item.id)"
                         >
                             <font-awesome-icon v-if="!needsUpdate[data.item.id].updating" icon="download" fixed-width />
                             <font-awesome-icon v-else icon="circle-notch" fixed-width spin />
@@ -134,7 +141,8 @@ import moment from 'moment'
 import addonsMixin from '../mixins/addons'
 import { remove, getAddonsPath } from '../utils/addons'
 import { toString } from '../utils/string'
-const { shell } = require('electron')
+const { shell, remote } = require('electron')
+const { Menu, MenuItem } = remote
 
 export default {
     mixins: [addonsMixin],
@@ -147,7 +155,9 @@ export default {
             lookingForUpdates: 'updates/loading',
             needsUpdate: 'updates/data',
             needsUpdateCount: 'updates/count',
-            updating: 'updates/updating'
+            updating: 'updates/updating',
+
+            exclude: 'exclude/list'
         }),
         mustSpecifyFolder () {
             return getAddonsPath() === ''
@@ -196,10 +206,13 @@ export default {
     watch: {
         addons (to) {
             this.lookForUpdates(to)
+        },
+        exclude (to) {
+            console.log('exclude', to)
         }
     },
     methods: {
-        async handleFetch () {
+        async handleRefresh () {
             if (this.mustSpecifyFolder) {
                 return
             }
@@ -218,8 +231,7 @@ export default {
             }
 
             try {
-                // const needsUpdate = await this.$store.dispatch('updates/look', addons)
-                await this.$store.dispatch('updates/look', addons)
+                /* const needsUpdate = */await this.$store.dispatch('updates/look', addons)
             } catch (err) {
                 this.$bvToast.toast('Could not look for updates. Please try again.', {
                     title: 'Whoops!',
@@ -230,6 +242,11 @@ export default {
             }
         },
         async handleUpdate (item) {
+            // Check exclude list
+            if (this.exclude.includes(item.id)) {
+                return Promise.resolve()
+            }
+
             if (!(item.id in this.needsUpdate)) {
                 return Promise.resolve()
             }
@@ -314,6 +331,7 @@ export default {
 
                 if (deletedPaths.length > 0) {
                     this.$store.commit('installed/remove', item)
+                    this.$store.dispatch('exclude/remove', item.id)
                 }
             } catch {
                 this.$bvToast.toast('Could not delete ' + item.name + '. Please try again.', {
@@ -326,11 +344,42 @@ export default {
 
             this.removing = false
         },
-        handleRowContextMenu (item) {
-            // if (!item.links.web) {
-            //     return
-            // }
-            // shell.openExternal(item.links.web)
+        handleRowContextMenu (item, index, event) {
+            event.preventDefault()
+
+            let _vm = this
+
+            let isExcluded
+            const row = this.$store.getters['exclude/list'].find((id) => {
+                return id == item.id
+            })
+            if (row !== undefined) {
+                isExcluded = true
+            }
+
+            // Create context menu
+            const contextMenu = new Menu()
+            contextMenu.append(new MenuItem({
+                label: isExcluded ? 'Remove from Exclude list' : 'Add to Exclude list',
+                click () {
+                    if (isExcluded) {
+                        _vm.$store.dispatch('exclude/remove', item.id)
+                    } else {
+                        _vm.$store.dispatch('exclude/add', item.id)
+                    }
+                }
+            }))
+            contextMenu.append(new MenuItem({
+                label: 'View AddOn web page',
+                click () {
+                    if (!item.links.web) {
+                        return
+                    }
+                    shell.openExternal(item.links.web)
+                }
+            }))
+
+            contextMenu.popup({ window: remote.getCurrentWindow() })
         },
         toDate (value) {
             return moment(value).fromNow()
@@ -358,7 +407,7 @@ export default {
     mounted () {
         if (!this.scanned && !this.scanning) {
             // Automatically start 1st addons scan
-            this.handleFetch()
+            this.handleRefresh()
         }
     }
 }

@@ -272,6 +272,13 @@ export default {
         this.checkWowFolder().then((isValid) => {
             this.wowFolderIsValid = isValid
         })
+
+        if (process.env.NODE_ENV !== 'production') {
+            this.checkIntervalOptions.unshift({
+                value: 60,
+                text: this.$t('app.settings.checkinterval.everyminute')
+            })
+        }
     }
 }
 </script>
