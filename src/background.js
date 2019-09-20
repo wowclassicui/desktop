@@ -44,7 +44,7 @@ function createWindow () {
   }
 
   win.on('close', (event) => {
-    if (electronStore.has('minimizeToTray') && electronStore.get('minimizeToTray')) {
+    if (electronStore.get('minimizeToTray', true)) {
       event.preventDefault()
       win.hide()
     }
