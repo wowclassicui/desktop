@@ -63,7 +63,7 @@ if (module.hot) {
 // Events
 ipcRenderer.send('initLookForUpdates', {
     lookForUpdates: electronStore.get('lookForUpdates', true),
-    checkInterval: electronStore.get('checkInterval', 1)
+    checkInterval: electronStore.get('checkInterval', 3600)
 })
 
 let addonsPath
