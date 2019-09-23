@@ -8,11 +8,11 @@
 * [x] Display basic addon informations
 * [x] Automated addons update (in the background)
 * [x] Browse the addons library and allows to install them directly from the App
-* [ ] Exclude list for when you don't want to automatically update a specific addon
+* [x] Exclude list - for when you don't want to automatically update a specific addon
 * [x] Toggle "minimize to system tray" option
 * [x] Run the app at system startup (if desired)
 * [ ] The app updates itself automatically
-* [ ] Mac compatibility
+* [ ] Mac compatibility (including binary serving)
 
 ## Development
 ```
