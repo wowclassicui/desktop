@@ -1,5 +1,6 @@
-import { scanAddonsDir } from '../../utils/addons'
+// import { scanAddonsDir } from '../../utils/addons'
 import addons from '../../api/addons'
+const { ipcRenderer: ipc } = require('electron-better-ipc')
 
 const state = {
     loading: false,
@@ -19,10 +20,11 @@ const actions = {
     async scan ({ commit }, path) {
         try {
             commit('loading')
-            let folders = await scanAddonsDir(path)
-            let res = await addons.findAll(folders)
+            // let folders = await scanAddonsDir(path)
+            const folders = await ipc.callMain('scanAddons', path)
+            const res = await addons.findAll(folders)
 
-            let data = res.data.data
+            const data = res.data.data
             commit('scanned', { data })
 
             // return data

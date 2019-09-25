@@ -4,9 +4,13 @@ const unzipper = require('unzipper')
 const crypto = require('crypto')
 const del = require('del')
 const blobToStream = require('blob-to-stream')
-const remote = require('electron').remote
-const fs = remote.require('fs')
-const path = remote.require('path')
+
+// const remote = require('electron').remote
+// const fs = remote.require('fs')
+// const path = remote.require('path')
+const fs = require('fs')
+const path = require('path')
+
 const { join } = path
 const glob = require('glob')
 import crc32 from 'crc/crc32'

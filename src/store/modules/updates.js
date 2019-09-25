@@ -1,4 +1,5 @@
 import { getHash, update } from '@/utils/addons'
+const { ipcRenderer: ipc } = require('electron-better-ipc')
 
 const state = {
     loading: false,
@@ -37,7 +38,8 @@ const actions = {
                     folders.push(addon.name)
                 }
 
-                const { hash } = await getHash(folders)
+                // const { hash } = await getHash(folders)
+                const hash = await ipc.callMain('addonGetHash', folders)
 
                 if (hash !== addon.mainFile.hash) {
                     needsUpdate[addon.id] = {
@@ -61,6 +63,7 @@ const actions = {
 
         try {
             const result = await update(addon)
+            // const result = await ipc.callMain('addonUpdate', addon)
 
             commit('updated', { id })
             return Promise.resolve(result)

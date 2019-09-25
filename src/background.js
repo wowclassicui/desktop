@@ -2,10 +2,15 @@
 'use strict'
 
 import { app, protocol, BrowserWindow, Tray, Menu, ipcMain } from 'electron'
+const { ipcMain: ipc } = require('electron-better-ipc')
 import path from 'path'
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib'
+
+import { scanAddonsDir, getHash, update } from './utils/addons'
+
 const Store = require('electron-store')
 const electronStore = new Store()
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -216,3 +221,19 @@ const askForUpdate = () => {
 
   win.webContents.send('askForUpdate')
 }
+
+// Addon utils
+
+ipc.answerRenderer('scanAddons', async (path) => {
+  return scanAddonsDir(path)
+})
+ipc.answerRenderer('addonGetHash', async (folders) => {
+  const { hash } = await getHash(folders)
+
+  return hash
+})
+// ipc.answerRenderer('addonUpdate', async (addon) => {
+//   const result = await update(addon)
+
+//   return result
+// })
