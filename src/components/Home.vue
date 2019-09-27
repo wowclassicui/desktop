@@ -60,10 +60,10 @@ export default {
             getCurrentWindow().reload()
         },
         openWebsite () {
-            shell.openExternal('https://classic-warcraft.com/about')
+            shell.openExternal('https://wowclassicui.com/about')
         },
         openFeedback () {
-            shell.openExternal('https://github.com/classic-warcraft/feedback/labels/desktop')
+            shell.openExternal('https://github.com/wowclassicui/feedback/labels/desktop')
         }
     },
     created () {

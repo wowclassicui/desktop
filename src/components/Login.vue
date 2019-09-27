@@ -47,10 +47,10 @@ export default {
     },
     methods: {
         handleCreateAccount () {
-            shell.openExternal('https://classic-warcraft.com/register')
+            shell.openExternal('https://wowclassicui.com/register')
         },
         handleForgotPassword () {
-            shell.openExternal('https://classic-warcraft.com/password/reset')
+            shell.openExternal('https://wowclassicui.com/password/reset')
         },
         handleSubmit () {
             this.submit = true
