@@ -5,12 +5,15 @@ module.exports = {
     pluginOptions: {
         electronBuilder: {
             builderOptions: {
-                productName: "Classic Warcraft App",
-                appId: "classicwarcraft.app",
+                productName: "WoWClassicUI App",
+                appId: "com.wowclassicui.app",
                 win: {
-                  extraResources: [
-                    'node_modules/regedit/vbs/*'
-                  ]
+                    publish: {
+                        provider: 'github'
+                    },
+                    extraResources: [
+                        'node_modules/regedit/vbs/*'
+                    ]
                 }
             }
         },

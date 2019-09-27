@@ -1,6 +1,6 @@
-# Classic Warcraft App
+# WoWClassicUI Desktop App
 
-[https://classic-warcraft.com](https://classic-warcraft.com)
+[https://wowclassicui.com](https://wowclassicui.com)
 
 ## Features
 
@@ -11,7 +11,7 @@
 * [x] Exclude list - for when you don't want to automatically update a specific addon
 * [x] Toggle "minimize to system tray" option
 * [x] Run the app at system startup (if desired)
-* [ ] The app updates itself automatically
+* [x] The app updates itself automatically
 * [ ] Mac compatibility (including binary serving)
 
 ## Development

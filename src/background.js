@@ -3,9 +3,9 @@
 
 import { app, protocol, BrowserWindow, Tray, Menu, ipcMain } from 'electron'
 const { ipcMain: ipc } = require('electron-better-ipc')
-import path from 'path'
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib'
-
+import { autoUpdater } from 'electron-updater'
+import path from 'path'
 import { scanAddonsDir, getHash, update } from './utils/addons'
 
 const Store = require('electron-store')
@@ -148,6 +148,10 @@ if (!gotTheLock && !isDevelopment) {
 
     createTray()
     createWindow()
+
+    if (!isDevelopment) {
+      autoUpdater.checkForUpdatesAndNotify()
+    }
   })
 }
 
