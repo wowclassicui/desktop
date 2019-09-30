@@ -170,6 +170,7 @@ if (isDevelopment) {
   }
 }
 
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 // Events & addons update
 let init = false
 let lookForUpdates = true
@@ -226,8 +227,8 @@ const askForUpdate = () => {
   win.webContents.send('askForUpdate')
 }
 
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 // Addon utils
-
 ipc.answerRenderer('scanAddons', async (path) => {
   return scanAddonsDir(path)
 })

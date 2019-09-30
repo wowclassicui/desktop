@@ -1,9 +1,6 @@
 import Vue from 'vue'
 import VueI18n from 'vue-i18n'
 
-// const en = require('../i18n/en.json')
-// const fr = require('../i18n/fr.json')
-
 function loadMessages () {
     const locales = require.context('../i18n', true, /[A-Za-z0-9-_,\s]+\.json$/i)
     const messages = {}

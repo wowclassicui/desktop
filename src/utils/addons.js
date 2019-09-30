@@ -4,13 +4,8 @@ const unzipper = require('unzipper')
 const crypto = require('crypto')
 const del = require('del')
 const blobToStream = require('blob-to-stream')
-
-// const remote = require('electron').remote
-// const fs = remote.require('fs')
-// const path = remote.require('path')
-const fs = require('fs')
-const path = require('path')
-
+const fs = require('fs') // remote.require('fs')
+const path = require('path') // remote.require('path')
 const { join } = path
 const glob = require('glob')
 import crc32 from 'crc/crc32'
@@ -23,16 +18,32 @@ const update = (addon) => {
             return reject(new Error('No main file to download, aborting'))
         }
 
-        // Delete first
-        remove(addon)
-        .then((deletedPaths) => {
-            // console.log('deletedPaths', deletedPaths)
+        let fileId = addon.mainFile.id
+        let addonsPath = getAddonsPath()
 
-            // Then install latest version
-            let fileId = addon.mainFile.id
+        downloads.newToken(fileId)
+        .then((res) => {
+            let downloadToken = res.data.data.token
 
-            install(fileId)
-            .then(resolve)
+            downloads.get(downloadToken)
+            .then((res) => {
+                // We can now remove the old version and replace it with
+                // the new one
+                remove(addon)
+                .then((deletedPaths) => {
+                    // console.log('deletedPaths', deletedPaths)
+
+                    // blob to stream, pipe extraction then resolve
+                    // using promise
+                    blobToStream(res.data)
+                    .pipe(unzipper.Extract({
+                        path: addonsPath
+                    }))
+                    .promise()
+                    .then(resolve)
+                    .catch(reject)
+                })
+            })
             .catch(reject)
         })
         .catch(reject)

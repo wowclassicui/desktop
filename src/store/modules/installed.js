@@ -1,4 +1,3 @@
-// import { scanAddonsDir } from '../../utils/addons'
 import addons from '../../api/addons'
 const { ipcRenderer: ipc } = require('electron-better-ipc')
 

@@ -1,4 +1,4 @@
-import { getHash, update } from '@/utils/addons'
+import { update } from '@/utils/addons'
 const { ipcRenderer: ipc } = require('electron-better-ipc')
 
 const state = {
@@ -83,8 +83,6 @@ const actions = {
 const mutations = {
     loading (state) {
         state.loading = true
-        // state.data = {}
-        // state.count = 0
     },
     looked (state, { needsUpdate }) {
         state.data = needsUpdate
