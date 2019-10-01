@@ -7,6 +7,8 @@ import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-buil
 import { autoUpdater } from 'electron-updater'
 import path from 'path'
 import { scanAddonsDir, getHash, update } from './utils/addons'
+import { init } from '@sentry/electron/dist/main'
+import * as Sentry from '@sentry/electron'
 
 const Store = require('electron-store')
 const electronStore = new Store()
@@ -170,19 +172,25 @@ if (isDevelopment) {
   }
 }
 
+// Sentry
+
+init({
+  dsn: process.env.VUE_APP_SENTRY_DSN
+})
+
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 // Events & addons update
-let init = false
+let initLookForUpdates = false
 let lookForUpdates = true
 let checkInterval = 3600
 let timer = null
 
 ipcMain.on('initLookForUpdates', function (evt, args) {
-  if (init) {
+  if (initLookForUpdates) {
     return
   }
 
-  init = true
+  initLookForUpdates = true
   lookForUpdates = args.lookForUpdates
   checkInterval = args.checkInterval
 

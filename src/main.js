@@ -1,5 +1,4 @@
 import Vue from 'vue'
-import App from './App.vue'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import BootstrapVue from 'bootstrap-vue'
@@ -7,18 +6,24 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { far } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-
+import moment from 'moment'
+import * as Sentry from '@sentry/electron'
 const { ipcRenderer } = require('electron')
 const Store = require('electron-store')
 const electronStore = new Store()
-import moment from 'moment'
 // const notifier = require('node-notifier')
 
+import App from './App.vue'
 import store from './store'
 import router from './router'
 import i18n from './i18n'
 import { initWowPath } from '@/utils/path'
 import { getAddonsPath } from '@/utils/addons'
+
+// Sentry
+Sentry.init({
+    dsn: process.env.VUE_APP_SENTRY_DSN
+})
 
 // Axios
 axios.defaults.baseURL = process.env.VUE_APP_API_BASE_URL
