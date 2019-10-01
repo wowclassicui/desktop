@@ -2,6 +2,8 @@
 
 [https://wowclassicui.com](https://wowclassicui.com)
 
+<img src="docs/app.png" alt="app" height="400">
+
 ## Features
 
 * [x] Fetch and Update existing addons
