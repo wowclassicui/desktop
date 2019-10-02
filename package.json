@@ -40,7 +40,7 @@
     "del": "^5.1.0",
     "electron-better-ipc": "^0.5.0",
     "electron-log": "^3.0.8",
-    "electron-store": "^4.0.0",
+    "electron-store": "^5.0.0",
     "electron-updater": "^4.1.2",
     "eslint-plugin-vue-i18n": "^0.2.3",
     "lodash": "^4.17.15",
