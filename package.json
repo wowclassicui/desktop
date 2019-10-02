@@ -38,7 +38,7 @@
     "core-js": "^2.6.5",
     "crc": "^3.8.0",
     "del": "^5.1.0",
-    "electron-better-ipc": "^0.5.0",
+    "electron-better-ipc": "^0.6.0",
     "electron-log": "^3.0.8",
     "electron-store": "^4.0.0",
     "electron-updater": "^4.1.2",
