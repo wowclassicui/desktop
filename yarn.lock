@@ -4275,10 +4275,10 @@ eslint-loader@^2.1.2:
     object-hash "^1.1.4"
     rimraf "^2.6.1"
 
-eslint-plugin-vue-i18n@^0.2.3:
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-vue-i18n/-/eslint-plugin-vue-i18n-0.2.3.tgz#280820f2a9abd80b58c59a5f50c8d582c60cc17d"
-  integrity sha512-6iYG3jHCR8VE+N35qPDvCJ1ko8e2S2I2+HDkHiZZy/Av1x6AEb8VEdQnEwwEwtrFYPPozPmys+0IWkA94Y1kow==
+eslint-plugin-vue-i18n@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-vue-i18n/-/eslint-plugin-vue-i18n-0.3.0.tgz#70ea6601e38f06255ad7183ffe3b0328174ba976"
+  integrity sha512-FQmZ+U0LnIDhAbVlJs36Ko2wUkdlGVlMWqpLoA3KIYC+RXo+DQkEE+zeEqHqJaKbsXVycsgQb0TAQOHfOILAnA==
   dependencies:
     flat "^4.1.0"
     glob "^7.1.3"
