@@ -40,7 +40,7 @@
     "electron-better-ipc": "^0.6.0",
     "electron-log": "^3.0.8",
     "electron-store": "^5.0.0",
-    "electron-updater": "^4.1.2",
+    "electron-updater": "^4.2.0",
     "eslint-plugin-vue-i18n": "^0.3.0",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
