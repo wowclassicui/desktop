@@ -223,7 +223,7 @@ export default {
             this.installing = true
             this.installingId = item.id
 
-            const resolved = await install(item.mainFile.id)
+            /* const resolved = */await install(item.mainFile.id)
 
             this.$store.commit('installed/add', item)
 
@@ -256,7 +256,7 @@ export default {
                 search: this.filter,
                 category: this.category
             })
-            .then((addons) => {
+            .then((/* addons */) => {
                 done()
             })
         }
