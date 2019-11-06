@@ -80,7 +80,7 @@ function createTray () {
     }
   ])
   tray.setContextMenu(contextMenu)
-  tray.setToolTip('Classic Warcraft App')
+  tray.setToolTip('WoWClassicUI App')
   tray.on('click', () => {
     toggleWindow()
   })

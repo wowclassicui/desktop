@@ -2,7 +2,7 @@
     <b-container class="my-2">
         <!-- App -->
         <div v-if="appVersion !== null" class="text-center text-secondary">
-            <p>Classic Warcraft App <strong>v{{ appVersion }}</strong></p>
+            <p>WoWClassicUI App <strong>v{{ appVersion }}</strong></p>
         </div>
         <b-row>
             <b-col>
