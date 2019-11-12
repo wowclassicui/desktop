@@ -324,7 +324,6 @@ export default {
 
             try {
                 let deletedPaths = await remove(item)
-                // console.log('deleted paths', deletedPaths)
 
                 if (deletedPaths.length > 0) {
                     this.$store.commit('installed/remove', item)

@@ -30,9 +30,7 @@ const update = (addon) => {
                 // We can now remove the old version and replace it with
                 // the new one
                 remove(addon)
-                .then((deletedPaths) => {
-                    // console.log('deletedPaths', deletedPaths)
-
+                .then((/* deletedPaths */) => {
                     // blob to stream, pipe extraction then resolve
                     // using promise
                     blobToStream(res.data)
