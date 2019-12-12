@@ -247,11 +247,19 @@ export default {
                 return Promise.resolve(false)
             }
 
-            const executablePath = path.resolve(this.wowFolder, '_classic_', 'Wow.exe')
+            const legacyExecPath = path.resolve(this.wowFolder, '_classic_', 'Wow.exe')
+            const executablePath = path.resolve(this.wowFolder, '_classic_', 'WowClassic.exe')
 
             return new Promise((resolve/* , reject */) => {
                 fs.access(executablePath, (err) => {
-                    resolve(err ? false : true)
+                    // resolve(err ? false : true)
+                    if (err) {
+                        fs.access(legacyExecPath, (err) => {
+                            resolve(err ? false : true)
+                        })
+                    }
+
+                    resolve(true)
                 })
             })
         }
