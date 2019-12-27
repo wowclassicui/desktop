@@ -4133,7 +4133,7 @@ electron-icon-builder@^1.0.1:
     icon-gen "^2.0.0"
     jimp "^0.9.3"
 
-electron-log@^4.0.0:
+electron-log@^4.0.1:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/electron-log/-/electron-log-4.0.2.tgz#159431b60688297420ce233895ec7f72d72e84dc"
   integrity sha512-pj5iTMvk2Wi0YtXFX1kM4QU9Dxpg9mTZnvIiFInsFBikxMl1HLs2S+ODQ1yIT4+tLLeBocu0BZdyyshm8/2png==
@@ -4350,12 +4350,11 @@ eslint-plugin-vue-i18n@^0.3.0:
     parse5 "^5.1.0"
     vue-eslint-parser "^6.0.3"
 
-eslint-plugin-vue@^6.0.1:
+eslint-plugin-vue@^6.0.2:
   version "6.1.1"
   resolved "https://registry.yarnpkg.com/eslint-plugin-vue/-/eslint-plugin-vue-6.1.1.tgz#183c4c8b54880e81b585d2f3dd5c183598e73664"
   integrity sha512-WsJcndi3iOtKF+Wkrw7mWiKT3GdGYUM8onbWYX7sBgggiFKoxHyx8VciA5letkx6iKzoW4B7XrBeVdTukmrtpg==
   dependencies:
-    vue-eslint-parser "^6.0.5"
     vue-eslint-parser "^7.0.0"
 
 eslint-scope@^4.0.0, eslint-scope@^4.0.3:
