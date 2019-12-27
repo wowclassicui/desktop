@@ -7,11 +7,11 @@ import { fas } from '@fortawesome/free-solid-svg-icons'
 import { far } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import moment from 'moment'
-// import * as Sentry from '@sentry/electron'
 import { init } from '@sentry/electron/dist/renderer'
 // eslint-disable-next-line no-unused-vars
 import * as Sentry from '@sentry/electron'
-const { ipcRenderer } = require('electron')
+// const { ipcRenderer } = require('electron')
+const { ipcRenderer: ipc } = require('electron-better-ipc')
 const Store = require('electron-store')
 const electronStore = new Store()
 // const notifier = require('node-notifier')
@@ -69,15 +69,20 @@ if (module.hot) {
 }
 
 // Events
-ipcRenderer.send('initLookForUpdates', {
+ipc.callMain('initLookForUpdates', {
     lookForUpdates: electronStore.get('lookForUpdates', true),
     checkInterval: electronStore.get('checkInterval', 3600)
+})
+ipc.callMain('sendAxiosDetails', {
+    baseURL: axios.defaults.baseURL,
+    token: localStorage.getItem('token'),
+    timeout: axios.defaults.timeout
 })
 
 let addonsPath
 let addons
 // let needsUpdate
-ipcRenderer.on('askForUpdate', async (/* evt, args */) => {
+ipc.answerMain('askForUpdate', async () => {
     addonsPath = getAddonsPath()
     if (addonsPath === '') {
         return

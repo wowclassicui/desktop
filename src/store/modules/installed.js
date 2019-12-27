@@ -3,6 +3,7 @@ const { ipcRenderer: ipc } = require('electron-better-ipc')
 
 const state = {
     loading: false,
+    installing: false,
     scanned: false,
     data: [],
     err: null
@@ -10,6 +11,7 @@ const state = {
 
 const getters = {
     loading: state => state.loading,
+    installing: state => state.installing,
     scanned: state => state.scanned,
     data: state => state.data,
     err: state => state.err
@@ -19,7 +21,6 @@ const actions = {
     async scan ({ commit }, path) {
         try {
             commit('loading')
-            // let folders = await scanAddonsDir(path)
             const folders = await ipc.callMain('scanAddons', path)
             const res = await addons.findAll(folders)
 
@@ -29,6 +30,19 @@ const actions = {
             // return data
             return Promise.resolve(data)
         } catch (err) {
+            commit('failed', { err })
+            return Promise.reject(err)
+        }
+    },
+    async install ({ commit }, addon) {
+        try {
+            commit('installing')
+            const result = await ipc.callMain('addonInstall', addon)
+
+            commit('installed', addon)
+            return Promise.resolve(result)
+        } catch (err) {
+            // commit('failedInstalling', addon)
             commit('failed', { err })
             return Promise.reject(err)
         }
@@ -45,8 +59,13 @@ const mutations = {
         state.err = null
         state.loading = false
     },
-    add (state, addon) {
+    installing (state/* , addon */) {
+        state.installing = true
+        // state.installingId = addon.id
+    },
+    installed (state, addon) {
         state.data.push(addon)
+        state.installing = false
     },
     remove (state, addon) {
         const index = state.data.map((e) => { return e.id }).indexOf(addon.id)

@@ -1,4 +1,3 @@
-import { update } from '@/utils/addons'
 const { ipcRenderer: ipc } = require('electron-better-ipc')
 
 const state = {
@@ -38,7 +37,6 @@ const actions = {
                     folders.push(addon.name)
                 }
 
-                // const { hash } = await getHash(folders)
                 const hash = await ipc.callMain('addonGetHash', folders)
 
                 if (hash !== addon.mainFile.hash) {
@@ -62,12 +60,12 @@ const actions = {
         commit('updating', { id })
 
         try {
-            const result = await update(addon)
-            // const result = await ipc.callMain('addonUpdate', addon)
+            const result = await ipc.callMain('addonUpdate', addon)
 
             commit('updated', { id })
             return Promise.resolve(result)
         } catch (err) {
+            commit('failedUpdating', { id })
             commit('failed', { err })
             return Promise.reject(err)
         }
@@ -112,6 +110,13 @@ const mutations = {
         state.err = err
         state.loading = false
         state.updating = false
+    },
+    failedUpdating (state, { id }) {
+        state.data = Object.assign(state.data, {
+            [id]: {
+                updating: false
+            }
+        })
     }
 }
 

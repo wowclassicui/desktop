@@ -8,7 +8,7 @@ export default {
         return axios({
             method: 'GET',
             url: '/downloads/' + token,
-            responseType: 'blob'
+            responseType: 'stream'
         })
     }
 }

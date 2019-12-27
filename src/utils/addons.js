@@ -3,7 +3,6 @@ const store = new Store()
 const unzipper = require('unzipper')
 const crypto = require('crypto')
 const del = require('del')
-const blobToStream = require('blob-to-stream')
 const fs = require('fs') // remote.require('fs')
 const path = require('path') // remote.require('path')
 const { join } = path
@@ -31,9 +30,9 @@ const update = (addon) => {
                 // the new one
                 remove(addon)
                 .then((/* deletedPaths */) => {
-                    // blob to stream, pipe extraction then resolve
+                    // pipe extraction then resolve
                     // using promise
-                    blobToStream(res.data)
+                    res.data
                     .pipe(unzipper.Extract({
                         path: addonsPath
                     }))
@@ -58,9 +57,9 @@ const install = (fileId) => {
 
             downloads.get(downloadToken)
             .then((res) => {
-                // blob to stream, pipe extraction then resolve
+                // pipe extraction then resolve
                 // using promise
-                blobToStream(res.data)
+                res.data
                 .pipe(unzipper.Extract({
                     path: addonsPath
                 }))

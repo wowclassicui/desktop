@@ -1,5 +1,6 @@
 import axios from 'axios'
 import auth from '../../api/auth'
+const { ipcRenderer: ipc } = require('electron-better-ipc')
 
 const state = {
     status: '',
@@ -21,7 +22,6 @@ const actions = {
             commit('request')
             auth.login(user)
                 .then((res) => {
-                    // const token = res.data.token
                     const token = res.data.access_token
                     const user = res.data.user
                     commit('success', { token, user })
@@ -29,16 +29,15 @@ const actions = {
                 })
                 .catch((err) => {
                     commit('error', { err })
+                    // Enforce "logout"
                     localStorage.removeItem('token')
                     reject(err)
                 })
         })
     },
     logout ({ commit }) {
-        return new Promise((resolve/*, reject*/) => {
+        return new Promise((resolve) => {
             commit('logout')
-            localStorage.removeItem('token')
-            delete axios.defaults.headers.common['Authorization']
             resolve()
         })
     }
@@ -57,6 +56,8 @@ const mutations = {
 
         localStorage.setItem('token', token)
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + token
+
+        ipc.callMain('setAxiosAuthToken', { token })
     },
     error (state, { err }) {
         state.err = err
@@ -65,6 +66,11 @@ const mutations = {
     logout (state) {
         state.status = ''
         state.token = ''
+
+        localStorage.removeItem('token')
+        delete axios.defaults.headers.common['Authorization']
+
+        ipc.callMain('unsetAxiosAuthToken')
     }
 }
 

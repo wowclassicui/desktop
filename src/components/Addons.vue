@@ -255,13 +255,16 @@ export default {
 
             try {
                 await this.$store.dispatch('updates/update', item)
-            } catch {
+            } catch (err) {
                 this.$bvToast.toast('Could not update ' + item.name + '. Please try again.', {
                     title: 'Whoops!',
                     variant: 'warning',
                     toaster: 'b-toaster-bottom-left',
                     solid: true
                 })
+
+                // Re-throw error to make sure Sentry gets it
+                // throw err
             }
 
             return Promise.resolve()

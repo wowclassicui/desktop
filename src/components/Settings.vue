@@ -138,7 +138,8 @@
 import moment from 'moment'
 const Store = require('electron-store')
 const store = new Store()
-const { remote, ipcRenderer } = require('electron')
+const { remote/* , ipcRenderer */ } = require('electron')
+const { ipcRenderer: ipc } = require('electron-better-ipc')
 const { app, dialog } = remote
 const fs = remote.require('fs')
 const path = remote.require('path')
@@ -191,7 +192,7 @@ export default {
         lookForUpdates (to) {
             store.set('lookForUpdates', to)
 
-            ipcRenderer.send('checkIntervalUpdate', {
+            ipc.callMain('checkIntervalUpdate', {
                 lookForUpdates: to,
                 checkInterval: this.checkInterval
             })
@@ -199,7 +200,7 @@ export default {
         checkInterval (to) {
             store.set('checkInterval', to)
 
-            ipcRenderer.send('checkIntervalUpdate', {
+            ipc.callMain('checkIntervalUpdate', {
                 lookForUpdates: this.lookForUpdates,
                 checkInterval: to
             })

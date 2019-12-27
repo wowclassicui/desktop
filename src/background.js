@@ -1,13 +1,15 @@
 /* global __static */
 'use strict'
 
-import { app, protocol, BrowserWindow, Tray, Menu, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow, Tray, Menu/* , ipcMain */ } from 'electron'
 const { ipcMain: ipc } = require('electron-better-ipc')
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib'
 import { autoUpdater } from 'electron-updater'
 import path from 'path'
-import { scanAddonsDir, getHash, update } from './utils/addons'
+import axios from 'axios'
+import { scanAddonsDir, getHash, install, update } from './utils/addons'
 import { init } from '@sentry/electron/dist/main'
+// eslint-disable-next-line no-unused-vars
 import * as Sentry from '@sentry/electron'
 
 const Store = require('electron-store')
@@ -148,8 +150,8 @@ if (!gotTheLock && !isDevelopment) {
       // }
     }
 
-    createTray()
     createWindow()
+    createTray()
 
     if (!isDevelopment) {
       autoUpdater.checkForUpdatesAndNotify()
@@ -185,7 +187,7 @@ let lookForUpdates = true
 let checkInterval = 3600
 let timer = null
 
-ipcMain.on('initLookForUpdates', function (evt, args) {
+ipc.answerRenderer('initLookForUpdates', async function (args) {
   if (initLookForUpdates) {
     return
   }
@@ -203,8 +205,7 @@ ipcMain.on('initLookForUpdates', function (evt, args) {
     timer = setInterval(askForUpdate, checkInterval * 1000)
   }
 })
-
-ipcMain.on('checkIntervalUpdate', function (evt, args) {
+ipc.answerRenderer('checkIntervalUpdate', async function (args) {
   if (checkInterval === args.checkInterval && args.lookForUpdates) {
     // There is no need to clear and update interval
     return
@@ -221,7 +222,6 @@ ipcMain.on('checkIntervalUpdate', function (evt, args) {
     timer = setInterval(askForUpdate, checkInterval * 1000)
   }
 })
-
 const askForUpdate = () => {
   if (win === null) {
     return
@@ -232,8 +232,24 @@ const askForUpdate = () => {
     return
   }
 
-  win.webContents.send('askForUpdate')
+  // win.webContents.send('askForUpdate')
+  ipc.callRenderer(win, 'askForUpdate')
 }
+
+// Axios
+ipc.answerRenderer('sendAxiosDetails', async function (args) {
+  axios.defaults.baseURL = args.baseURL
+  if (args.token) {
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + args.token
+  }
+  axios.defaults.timeout = args.timeout
+})
+ipc.answerRenderer('setAxiosAuthToken', async function (args) {
+  axios.defaults.headers.common['Authorization'] = 'Bearer ' + args.token
+})
+ipc.answerRenderer('unsetAxiosAuthToken', async function () {
+  delete axios.defaults.headers.common['Authorization']
+})
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 // Addon utils
@@ -245,8 +261,9 @@ ipc.answerRenderer('addonGetHash', async (folders) => {
 
   return hash
 })
-// ipc.answerRenderer('addonUpdate', async (addon) => {
-//   const result = await update(addon)
-
-//   return result
-// })
+ipc.answerRenderer('addonUpdate', async (addon) => {
+  return await update(addon)
+})
+ipc.answerRenderer('addonInstall', async (addon) => {
+  return await install(addon.mainFile.id)
+})

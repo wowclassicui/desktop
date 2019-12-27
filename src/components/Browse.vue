@@ -106,7 +106,6 @@
 <script>
 import { mapGetters } from 'vuex'
 import addonsMixin from '../mixins/addons'
-import { install } from '../utils/addons'
 import categoriesApi from '../api/categories'
 import { debounce } from 'lodash'
 const { shell, remote } = require('electron')
@@ -120,7 +119,8 @@ export default {
             loading: 'addons/loading',
             cursor: 'addons/cursor',
             previous: 'addons/previous',
-            installed: 'installed/data'
+            installed: 'installed/data',
+            installing: 'installed/installing'
         })
     },
     data () {
@@ -163,7 +163,7 @@ export default {
             busy: false,
             searching: false,
             loadingMore: false,
-            installing: false,
+            // installing: false,
             installingId: null
         }
     },
@@ -183,7 +183,7 @@ export default {
 
             const _vm = this
             _vm.loadingMore = true
-            this.fetch(cursor, previous, () => {
+            this.fetch(cursor, previous, (/* addons */) => {
                 // done
                 _vm.loadingMore = false
             })
@@ -220,15 +220,22 @@ export default {
                 return
             }
 
-            this.installing = true
             this.installingId = item.id
 
-            /* const resolved = */await install(item.mainFile.id)
-
-            this.$store.commit('installed/add', item)
+            try {
+                /* const result = */await this.$store.dispatch('installed/install', item)
+            } catch (err) {
+                this.$bvToast.toast('Could not install ' + item.name + '. Please try again.', {
+                    title: 'Whoops!',
+                    variant: 'warning',
+                    toaster: 'b-toaster-bottom-left',
+                    solid: true
+                })
+            }
 
             this.installingId = null
-            this.installing = false
+
+            Promise.resolve()
         },
         handleRowContextMenu (item, index, event) {
             event.preventDefault()
@@ -256,9 +263,10 @@ export default {
                 search: this.filter,
                 category: this.category
             })
-            .then((/* addons */) => {
-                done()
-            })
+            // .then((/* addons */) => {
+            //     done()
+            // })
+            .then(done)
         }
     },
     mounted () {
