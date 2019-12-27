@@ -7,6 +7,9 @@ import { fas } from '@fortawesome/free-solid-svg-icons'
 import { far } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import moment from 'moment'
+// import * as Sentry from '@sentry/electron'
+import { init } from '@sentry/electron/dist/renderer'
+// eslint-disable-next-line no-unused-vars
 import * as Sentry from '@sentry/electron'
 const { ipcRenderer } = require('electron')
 const Store = require('electron-store')
@@ -21,7 +24,7 @@ import { initWowPath } from '@/utils/path'
 import { getAddonsPath } from '@/utils/addons'
 
 // Sentry
-Sentry.init({
+init({
     dsn: process.env.VUE_APP_SENTRY_DSN
 })
 
