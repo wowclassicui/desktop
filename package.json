@@ -64,7 +64,7 @@
     "electron": "^6.1.6",
     "electron-icon-builder": "^1.0.1",
     "eslint": "^5.16.0",
-    "eslint-plugin-vue": "^6.0.2",
+    "eslint-plugin-vue": "^6.1.2",
     "node-sass": "^4.13.0",
     "sass-loader": "^8.0.0",
     "vue-cli-plugin-electron-builder": "^1.4.4",
