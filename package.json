@@ -36,7 +36,7 @@
     "bootstrap-vue": "^2.1.0",
     "crc": "^3.8.0",
     "del": "^5.1.0",
-    "electron-better-ipc": "^0.7.0",
+    "electron-better-ipc": "^0.8.0",
     "electron-log": "^4.0.1",
     "electron-store": "^5.1.0",
     "electron-updater": "^4.2.0",
