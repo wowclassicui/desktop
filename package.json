@@ -46,7 +46,7 @@
     "node-glob": "^1.2.0",
     "node-notifier": "^6.0.0",
     "regedit": "^3.0.3",
-    "unzipper": "^0.10.8",
+    "unzipper": "^0.10.9",
     "vue": "^2.6.11",
     "vue-axios": "^2.1.5",
     "vue-cli-plugin-i18n": "^0.6.1",
