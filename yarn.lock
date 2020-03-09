@@ -10640,10 +10640,10 @@ vue-axios@^2.1.5:
   resolved "https://registry.yarnpkg.com/vue-axios/-/vue-axios-2.1.5.tgz#1af4bf1218ed71309c76afb38d0f683e312c24a7"
   integrity sha512-th5xVbInVoyIoe+qY+9GCflEVezxAvztD4xpFF39SRQYqpoKD2qkmX8yv08jJG9a2SgNOCjirjJGSwg/wTrbmA==
 
-vue-cli-plugin-electron-builder@^1.4.4:
-  version "1.4.4"
-  resolved "https://registry.yarnpkg.com/vue-cli-plugin-electron-builder/-/vue-cli-plugin-electron-builder-1.4.4.tgz#82d2bcf106161a2d694a6a2bc4f5a7c92df340f8"
-  integrity sha512-g+x4uRMQQfYvfSTEwC4swRSRQOpEhV6cRx4kKus2b2MWz/4h1pfCqYwGdR9xLeaJdhfAH3c328feugnd6MIenQ==
+vue-cli-plugin-electron-builder@^1.4.6:
+  version "1.4.6"
+  resolved "https://registry.yarnpkg.com/vue-cli-plugin-electron-builder/-/vue-cli-plugin-electron-builder-1.4.6.tgz#5de519edc158c80ae72a67e8ae8ae983e38ecb7a"
+  integrity sha512-nHTkvhBdyyFQaJZaoAfGHf7JxxCGe8TTEthA+wXhA68cuuHLow5vX0EieApgaOXoYa0a3vkD/oWvEJXqToXrZA==
   dependencies:
     chokidar "^3.0.2"
     electron-builder "^21.2.0"
