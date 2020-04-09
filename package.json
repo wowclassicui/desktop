@@ -44,7 +44,7 @@
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "node-glob": "^1.2.0",
-    "node-notifier": "^6.0.0",
+    "node-notifier": "^7.0.0",
     "regedit": "^3.0.3",
     "unzipper": "^0.10.10",
     "vue": "^2.6.11",
