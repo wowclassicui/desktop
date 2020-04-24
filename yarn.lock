@@ -4205,10 +4205,10 @@ ejs@~2.5.6:
   resolved "https://registry.yarnpkg.com/ejs/-/ejs-2.5.9.tgz#7ba254582a560d267437109a68354112475b0ce5"
   integrity sha512-GJCAeDBKfREgkBtgrYSf9hQy9kTb3helv0zGdzqhM7iAkW8FA/ZF97VQDbwFiwIT8MQLLOe5VlPZOEvZAqtUAQ==
 
-electron-better-ipc@^0.8.0:
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/electron-better-ipc/-/electron-better-ipc-0.8.0.tgz#d76a9f7d73d5890c3a0363ef368d5fd2a9e0e21f"
-  integrity sha512-cxGOHzOoZs9kQlWaJElLVu8tPnFpBzg7pZ0rObHDGcxw9Kai/w/NRq8Yad5dlA/3EK9eMOsT8+qdvQHWsJzgaA==
+electron-better-ipc@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/electron-better-ipc/-/electron-better-ipc-1.0.1.tgz#ec5f397d44ce1225d826461ff93881912fe68490"
+  integrity sha512-4okAJoeY2+NXsPLYE+ccVn2NSDRCqMAAV1Kp5YzNRGki505p9nXuM6+d2QAlZ1OWyQxXmDm0B+eezjQL55uF/A==
   dependencies:
     serialize-error "^5.0.0"
 
