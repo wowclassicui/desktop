@@ -4270,10 +4270,10 @@ electron-icon-builder@^1.0.1:
     icon-gen "^2.0.0"
     jimp "^0.9.3"
 
-electron-log@^4.0.6:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/electron-log/-/electron-log-4.1.0.tgz#06c23f5ed1b23dddb3252ad523e8279fb90bab6b"
-  integrity sha512-F3KVUe4s0MKs7mjkvz8g6WrfL1gCITfbVOcU9qLI5KjRbtIWeC8OfAneloz8zdW99TI2xcNc639ppgRXUpKjHw==
+electron-log@^4.2.2:
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/electron-log/-/electron-log-4.2.2.tgz#b358dc6d1e4772465609ee3d8ad9f594d9e742c8"
+  integrity sha512-lBpLh1Q8qayrTxFIrTPcNjSHsosvUfOYyZ8glhiLcx7zCNPDGuj8+nXlEaaSS6LRiQQbLgLG+wKpuvztNzBIrA==
 
 electron-publish@21.2.0:
   version "21.2.0"
