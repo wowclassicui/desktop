@@ -58,7 +58,7 @@
     "@intlify/vue-i18n-loader": "^1.0.0",
     "@types/crc": "^3.4.0",
     "@vue/cli-plugin-babel": "^4.1.2",
-    "@vue/cli-plugin-eslint": "^4.1.2",
+    "@vue/cli-plugin-eslint": "^4.4.5",
     "@vue/cli-service": "^4.4.4",
     "babel-eslint": "^10.0.1",
     "electron": "^9.0.0",
