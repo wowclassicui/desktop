@@ -3,7 +3,7 @@
   "description": "The WoWClassicUI App - Keeps your AddOns up to date",
   "homepage": "https://wowclassicui.com",
   "license": "UNLICENSED",
-  "version": "1.2.2",
+  "version": "1.4.0",
   "author": {
     "email": "contact@wowclassicui.com",
     "name": "WoWClassicUI",
@@ -49,25 +49,25 @@
     "unzipper": "^0.10.10",
     "vue": "^2.6.11",
     "vue-axios": "^2.1.5",
-    "vue-cli-plugin-i18n": "^0.6.1",
+    "vue-cli-plugin-i18n": "^1.0.1",
     "vue-i18n": "^8.15.2",
-    "vue-i18n-loader": "^1.0.0",
     "vue-router": "^3.1.5",
     "vuex": "^3.1.2"
   },
   "devDependencies": {
+    "@intlify/vue-i18n-loader": "^1.0.0",
     "@types/crc": "^3.4.0",
     "@vue/cli-plugin-babel": "^4.1.2",
     "@vue/cli-plugin-eslint": "^4.1.2",
     "@vue/cli-service": "^4.4.4",
     "babel-eslint": "^10.0.1",
-    "electron": "^6.1.6",
+    "electron": "^9.0.0",
     "electron-icon-builder": "^1.0.1",
     "eslint": "^6.8.0",
     "eslint-plugin-vue": "^6.1.2",
     "node-sass": "^4.13.1",
     "sass-loader": "^8.0.2",
-    "vue-cli-plugin-electron-builder": "^1.4.6",
+    "vue-cli-plugin-electron-builder": "^2.0.0-rc.2",
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {

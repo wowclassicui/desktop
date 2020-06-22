@@ -4,6 +4,7 @@ module.exports = {
     },
     pluginOptions: {
         electronBuilder: {
+            nodeIntegration: true,
             builderOptions: {
                 productName: "WoWClassicUI App",
                 appId: "com.wowclassicui.app",
