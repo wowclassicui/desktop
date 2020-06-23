@@ -40,3 +40,8 @@ yarn run test
 ```
 yarn run lint
 ```
+
+## Deploy
+```
+yarn run electron:build -p always
+```
