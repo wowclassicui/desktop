@@ -59,7 +59,7 @@
     "@types/crc": "^3.4.0",
     "@vue/cli-plugin-babel": "^4.4.5",
     "@vue/cli-plugin-eslint": "^4.4.5",
-    "@vue/cli-service": "^4.4.4",
+    "@vue/cli-service": "^4.5.2",
     "babel-eslint": "^10.0.1",
     "electron": "^9.0.0",
     "electron-icon-builder": "^1.0.1",
