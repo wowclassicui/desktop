@@ -3,7 +3,11 @@
 
 import { app, protocol, BrowserWindow, Tray, Menu/* , ipcMain */ } from 'electron'
 const { ipcMain: ipc } = require('electron-better-ipc')
-import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib'
+import {
+  createProtocol,
+  // installVueDevtools
+} from 'vue-cli-plugin-electron-builder/lib'
+// import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { autoUpdater } from 'electron-updater'
 import path from 'path'
 import axios from 'axios'
@@ -147,6 +151,7 @@ if (!gotTheLock && !isDevelopment) {
       // In addition, if the linked issue is closed, you can upgrade electron and uncomment these lines
       // try {
       //   await installVueDevtools()
+      //   await installExtension(VUEJS_DEVTOOLS)
       // } catch (e) {
       //   console.error('Vue Devtools failed to install:', e.toString())
       // }
