@@ -41,7 +41,11 @@ yarn run test
 yarn run lint
 ```
 
-## Deploy
+### Deploy
 ```
 yarn run electron:build -p always
 ```
+
+## TODO
+
+* [ ] Electron's remote module deprecation https://github.com/electron/electron/issues/21408
