@@ -35,7 +35,7 @@
     "axios": "^0.19.2",
     "bootstrap-vue": "^2.9.0",
     "crc": "^3.8.0",
-    "del": "^5.1.0",
+    "del": "^6.0.0",
     "electron-better-ipc": "^1.0.0",
     "electron-log": "^4.2.2",
     "electron-store": "^5.2.0",
