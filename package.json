@@ -38,7 +38,7 @@
     "del": "^5.1.0",
     "electron-better-ipc": "^1.0.0",
     "electron-log": "^4.2.2",
-    "electron-store": "^5.2.0",
+    "electron-store": "^8.0.0",
     "electron-updater": "^4.3.1",
     "eslint-plugin-vue-i18n": "^0.3.0",
     "lodash": "^4.17.21",
